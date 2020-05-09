@@ -11,103 +11,111 @@ import (
 
 var ghClient *github.Client
 
-var ghCmd = &cobra.Command{
-	Use:   "gh",
-	Short: "GitHub information",
+// GitHub Commands
+var (
+	ghCmd = &cobra.Command{
+		Use:   "gh",
+		Short: "GitHub information",
 
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		token := viper.GetString("github.token")
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			token := viper.GetString("github.token")
+			orgName := viper.GetString("github.organization")
 
-		if token == "" {
-			return fmt.Errorf("github.token can't be empty")
-		}
+			if token == "" {
+				return fmt.Errorf("github.token can't be empty")
+			}
 
-		var err error
+			var err error
 
-		logger.Debug().
-			Str("Token", token).
-			Msg("Creating GitHub Client")
+			logger.Debug().
+				Str("Token", token).
+				Msg("Creating GitHub Client")
 
-		ghClient, err = github.New(token, "ThundeRatz", &logger)
+			ghClient, err = github.New(token, orgName, &logger)
 
-		if err != nil {
-			logger.Error().Err(err).Msg("Couldn't create GitHub client")
+			if err != nil {
+				logger.Error().Err(err).Msg("Couldn't create GitHub client")
+				return nil
+			}
+
+			logger.Debug().Msg("Done")
+
 			return nil
-		}
+		},
+	}
 
-		logger.Debug().Msg("Done")
+	ghStatsCmd = &cobra.Command{
+		Use:   "stats",
+		Short: "Members contributions to all repositories",
 
-		return nil
-	},
-}
+		Run: func(cmd *cobra.Command, args []string) {
+			ordered := func(sl map[string]int) []string {
+				type kv struct {
+					k string
+					v int
+				}
 
-var ghStatsCmd = &cobra.Command{
-	Use:   "stats",
-	Short: "Members contributions to all repositories",
+				var ss []kv
+				for k, v := range sl {
+					ss = append(ss, kv{k, v})
+				}
 
-	Run: func(cmd *cobra.Command, args []string) {
-		ordered := func(sl map[string]int) []string {
-			type kv struct {
-				k string
-				v int
+				sort.Slice(ss, func(i, j int) bool {
+					return ss[i].v > ss[j].v
+				})
+
+				ranked := make([]string, len(sl))
+
+				for i, kv := range ss {
+					ranked[i] = kv.k
+				}
+
+				return ranked
 			}
 
-			var ss []kv
-			for k, v := range sl {
-				ss = append(ss, kv{k, v})
+			rs := ghClient.GetStats()
+
+			fmt.Println("Additions:")
+
+			for _, p := range ordered(rs.Adds) {
+				if rs.Adds[p] == 0 {
+					continue
+				}
+
+				fmt.Printf("%s: %d\n", p, rs.Adds[p])
 			}
 
-			sort.Slice(ss, func(i, j int) bool {
-				return ss[i].v > ss[j].v
-			})
+			fmt.Println("\nDeletions:")
 
-			ranked := make([]string, len(sl))
+			for _, p := range ordered(rs.Dels) {
+				if rs.Dels[p] == 0 {
+					continue
+				}
 
-			for i, kv := range ss {
-				ranked[i] = kv.k
+				fmt.Printf("%s: %d\n", p, rs.Dels[p])
 			}
 
-			return ranked
-		}
+			fmt.Println("\nCommits:")
 
-		rs := ghClient.GetStats()
+			for _, p := range ordered(rs.Commits) {
+				if rs.Commits[p] == 0 {
+					continue
+				}
 
-		fmt.Println("Additions:")
-
-		for _, p := range ordered(rs.Adds) {
-			if rs.Adds[p] == 0 {
-				continue
+				fmt.Printf("%s: %d\n", p, rs.Commits[p])
 			}
-
-			fmt.Printf("%s: %d\n", p, rs.Adds[p])
-		}
-
-		fmt.Println("\nDeletions:")
-
-		for _, p := range ordered(rs.Dels) {
-			if rs.Dels[p] == 0 {
-				continue
-			}
-
-			fmt.Printf("%s: %d\n", p, rs.Dels[p])
-		}
-
-		fmt.Println("\nCommits:")
-
-		for _, p := range ordered(rs.Commits) {
-			if rs.Commits[p] == 0 {
-				continue
-			}
-
-			fmt.Printf("%s: %d\n", p, rs.Commits[p])
-		}
-	},
-}
+		},
+	}
+)
 
 func init() {
 	ghCmd.PersistentFlags().String("token", "", "GitHub Access Token")
+	ghCmd.PersistentFlags().String("org", "", "GitHub Organization (default ThundeRatz)")
 
 	viper.BindPFlag("github.token", ghCmd.PersistentFlags().Lookup("token"))
+	viper.BindPFlag("github.organization", ghCmd.PersistentFlags().Lookup("org"))
+
+	viper.SetDefault("github.organization", "ThundeRatz")
 
 	ghCmd.AddCommand(ghStatsCmd)
 	rootCmd.AddCommand(ghCmd)
