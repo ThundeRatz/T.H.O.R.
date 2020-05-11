@@ -29,6 +29,7 @@ var (
 
 			logger.Debug().
 				Str("Token", token).
+				Str("org", orgName).
 				Msg("Creating GitHub Client")
 
 			ghClient, err = github.New(token, orgName, &logger)
