@@ -4,7 +4,6 @@ package github
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/google/go-github/v31/github"
@@ -113,7 +112,13 @@ func (gh *Client) GetStats() RepoStats {
 		}
 
 		if err != nil {
-			fmt.Println(err)
+			if gh.logger != nil {
+				gh.logger.Error().
+					Err(err).
+					Send()
+			}
+
+			continue
 		}
 
 		for _, stat := range stats {
