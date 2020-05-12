@@ -1,7 +1,6 @@
 package gitea
 
 import (
-	"fmt"
 	"os"
 
 	"code.gitea.io/sdk/gitea"
@@ -53,23 +52,26 @@ func (c *Client) ListRepos() []string {
 }
 
 // CloneRepo clones a repository in the current path
-func (c *Client) CloneRepo(repoName string) error {
+func (c *Client) CloneRepo(repoName string, verbose bool) error {
 	repo, err := c.g.GetRepo(c.org.UserName, repoName)
 
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("%+v\n", repo)
-
-	_, err = git.PlainClone(repoName, false, &git.CloneOptions{
+	opts := &git.CloneOptions{
 		URL: c.url + repo.FullName,
 		Auth: &http.BasicAuth{
 			Username: c.user.UserName,
 			Password: c.token,
 		},
-		Progress: os.Stdout,
-	})
+	}
+
+	if verbose {
+		opts.Progress = os.Stdout
+	}
+
+	_, err = git.PlainClone(repoName, false, opts)
 
 	return err
 }

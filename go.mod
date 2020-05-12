@@ -8,6 +8,7 @@ require (
 	github.com/go-git/go-git/v5 v5.0.0
 	github.com/golang/protobuf v1.4.1 // indirect
 	github.com/google/go-github/v31 v31.0.0
+	github.com/manifoldco/promptui v0.7.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.0 // indirect
 	github.com/pelletier/go-toml v1.7.0 // indirect
