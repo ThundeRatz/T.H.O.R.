@@ -118,13 +118,17 @@ var (
 				for _, v := range repoList {
 					prompt := promptui.Select{
 						Label: fmt.Sprintf("Clone %s?", v),
-						Items: []string{"Yes", "No"},
+						Items: []string{"Yes", "No", "Cancel"},
 					}
 
 					_, result, err := prompt.Run()
 
 					if err != nil {
-						result = "No"
+						result = "Cancel"
+					}
+
+					if result == "Cancel" {
+						break
 					}
 
 					if result == "Yes" {
