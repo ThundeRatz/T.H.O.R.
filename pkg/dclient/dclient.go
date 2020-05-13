@@ -1,4 +1,5 @@
-package discord
+// Package dclient is a wrapper around DiscordGo library
+package dclient
 
 import (
 	"fmt"
@@ -11,15 +12,19 @@ import (
 
 // Context holds extra data to be passed along to command handlers
 type Context struct {
-	Args            []string
 	Content         string
+	Command         string
+	Args            []string
 	Settings        map[string]string // Prefix
 	AuthorPermLevel string
+
+	Session *discordgo.Session
+	Message *discordgo.Message
 }
 
 // Command holds information about a command
 type Command struct {
-	Run         func(*discordgo.Session, *discordgo.Message, *Context)
+	Run         func(*Context)
 	Name        string
 	Aliases     []string
 	Enabled     bool
@@ -43,14 +48,25 @@ type Client struct {
 	token    string
 }
 
-// New creates a new client with the provided logger
-func New(token string, logger *zerolog.Logger) *Client {
+// New creates a new client
+func New() *Client {
 	return &Client{
-		Logger: logger,
-		token:  token,
-
 		aliases:  make(map[string]string),
 		commands: make(map[string]*Command),
+	}
+}
+
+// Init initializes a client with a provided token and logger
+func (c *Client) Init(token string, logger *zerolog.Logger) {
+	c.Logger = logger
+	c.token = token
+
+	c.session, _ = discordgo.New(fmt.Sprintf("Bot %s", c.token))
+	c.session.AddHandler(c.OnMessageCreate)
+
+	err := c.session.Open()
+	if err != nil && c.Logger != nil {
+		c.Logger.Error().Err(err).Msg("error opening connection to Discord")
 	}
 }
 
@@ -61,10 +77,6 @@ func New(token string, logger *zerolog.Logger) *Client {
 func (c *Client) OnMessageCreate(ds *discordgo.Session, mc *discordgo.MessageCreate) {
 	if mc.Author.Bot {
 		return
-	}
-
-	context := &Context{
-		Content: strings.TrimSpace(mc.Content),
 	}
 
 	// Get settings
@@ -80,12 +92,23 @@ func (c *Client) OnMessageCreate(ds *discordgo.Session, mc *discordgo.MessageCre
 	command, args = strings.ToLower(strings.TrimPrefix(args[0], prefix)), args[1:]
 
 	// Get permLevel for mc c.permLevel(mc)
-	// cmd := c.GetCommand(command)
-	// Checar se tá nulo e se nao tiver se ta enabled
+	cmd, ok := c.commands[command]
 
-	// if mc.GuildID {} Checa se ta numa guilda e se é guildOnly o command
+	if !ok {
+		cmd, ok = c.commands[c.aliases[command]]
+	}
+
+	if !ok || !cmd.Enabled {
+		ds.ChannelMessageSend(mc.ChannelID, fmt.Sprintf("Não consegui encontrar o comando `%s`. Use `%shelp` para ver os comandos disponíveis", command, prefix))
+		return
+	}
+
+	if mc.GuildID == "" && cmd.GuildOnly {
+		ds.ChannelMessageSend(mc.ChannelID, "Esse comando não está disponível em mensagens privadas. Use-o numa guilda.")
+		return
+	}
+
 	// Checa se o level é maior que que level do comando
-	// Loga
 
 	if c.Logger != nil {
 		c.Logger.Debug().
@@ -95,8 +118,14 @@ func (c *Client) OnMessageCreate(ds *discordgo.Session, mc *discordgo.MessageCre
 			Msg("Running command")
 	}
 
-	c.commands[command].Run(ds, mc.Message, context)
-	// Run(ds, mc.Message, ctx)
+	cmd.Run(&Context{
+		Content: strings.TrimSpace(mc.Content),
+		Command: command,
+		Args:    args,
+		Session: ds,
+		Message: mc.Message,
+	})
+
 	// StopTyping
 }
 
@@ -120,13 +149,7 @@ func (c *Client) permLevel(*discordgo.Message) int {
 
 // Start runs the bot
 func (c *Client) Start() {
-	c.session, _ = discordgo.New(fmt.Sprintf("Bot %s", c.token))
-	c.session.AddHandler(c.OnMessageCreate)
 
-	err := c.session.Open()
-	if err != nil && c.Logger != nil {
-		c.Logger.Error().Err(err).Msg("error opening connection to Discord")
-	}
 }
 
 // Stop stops the bot
