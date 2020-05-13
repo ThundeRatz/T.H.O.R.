@@ -114,7 +114,7 @@ var (
 			err := staticClient.Mkdir(args[0], parent)
 
 			if err != nil {
-				logger.Error().Msg("Couldn't create folder, maybe it already exists or you need to create it's parents first")
+				logger.Error().Msg("Couldn't create folder, maybe it already exists or you need to create it's parents first (-p)")
 				return
 			}
 

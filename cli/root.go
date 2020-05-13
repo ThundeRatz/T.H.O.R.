@@ -58,16 +58,16 @@ func initConfig() {
 	} else {
 		home, err := homedir.Dir()
 		if err != nil {
-			logger.Fatal().Msg("Couldn't detect your home directory")
+			logger.Error().Msg("Couldn't detect your home directory")
+		} else {
+			viper.SetConfigName(".thor")
+			viper.SetConfigType("toml")
+			viper.AddConfigPath(home)
 		}
-
-		viper.SetConfigName(".thor")
-		viper.SetConfigType("toml")
-		viper.AddConfigPath(home)
 	}
 
 	if err := viper.ReadInConfig(); err != nil {
-		logger.Warn().Err(err).Msg("Couldn't read config file")
+		logger.Error().Err(err).Msg("Couldn't read config file")
 	}
 
 	logger.Debug().Msg("Initialized")
