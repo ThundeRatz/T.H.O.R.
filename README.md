@@ -1,6 +1,6 @@
-<div style="text-align: center">
+<p align="center">
 <img src="docs/thorlogo.png" >
-</div>
+</p>
 
 ---
 
