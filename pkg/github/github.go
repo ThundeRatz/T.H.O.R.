@@ -16,7 +16,7 @@ type Client struct {
 	org *github.Organization
 	c   *github.Client
 
-	logger *zerolog.Logger
+	logger zerolog.Logger
 }
 
 // RepoStats holds repository statistics, it's a map of username:<int> for additions
@@ -46,7 +46,7 @@ func New(token, orgName string, logger *zerolog.Logger) (*Client, error) {
 	return &Client{
 		org:    org,
 		c:      client,
-		logger: logger,
+		logger: logger.With().Str("pkg", "github").Logger(),
 	}, nil
 }
 
@@ -98,11 +98,9 @@ func (gh *Client) GetStats() RepoStats {
 	}
 
 	for _, r := range repos {
-		if gh.logger != nil {
-			gh.logger.Info().
-				Str("repo", r).
-				Msg("Processing Repository")
-		}
+		gh.logger.Info().
+			Str("repo", r).
+			Msg("Processing Repository")
 
 		stats, resp, err := gh.c.Repositories.ListContributorsStats(context.Background(), gh.org.GetLogin(), r)
 
@@ -112,11 +110,9 @@ func (gh *Client) GetStats() RepoStats {
 		}
 
 		if err != nil {
-			if gh.logger != nil {
-				gh.logger.Error().
-					Err(err).
-					Send()
-			}
+			gh.logger.Error().
+				Err(err).
+				Send()
 
 			continue
 		}

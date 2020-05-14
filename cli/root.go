@@ -28,7 +28,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.thor)")
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbosity")
+	rootCmd.PersistentFlags().CountP("verbose", "v", "Verbosity")
 }
 
 func initConfig() {
@@ -45,7 +45,9 @@ func initConfig() {
 			Timestamp().
 			Logger()
 
-		if v, _ := rootCmd.PersistentFlags().GetBool("verbose"); v {
+		if v, _ := rootCmd.PersistentFlags().GetCount("verbose"); v >= 2 {
+			logger = logger.Level(zerolog.DebugLevel)
+		} else if v == 1 {
 			logger = logger.Level(zerolog.InfoLevel)
 		} else {
 			logger = logger.Level(zerolog.WarnLevel)

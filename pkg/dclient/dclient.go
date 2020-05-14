@@ -37,10 +37,10 @@ type Command struct {
 
 // Client is the main struct
 type Client struct {
-	Logger     *zerolog.Logger
 	SettingsDB *bbolt.DB
 	LevelCache map[string]int // Vem da config
 	Config     []string
+	logger     zerolog.Logger
 
 	aliases  map[string]string
 	commands map[string]*Command
@@ -57,17 +57,26 @@ func New() *Client {
 }
 
 // Init initializes a client with a provided token and logger
-func (c *Client) Init(token string, logger *zerolog.Logger) {
-	c.Logger = logger
+func (c *Client) Init(token string, logger *zerolog.Logger) error {
+	c.logger = logger.With().Str("pkg", "dclient").Logger()
 	c.token = token
+
+	c.logger.Debug().Msg("Initializing discord client")
+
+	for _, v := range c.commands {
+		c.logger.Debug().Str("cmd", v.Name).Msg("Loaded command")
+	}
 
 	c.session, _ = discordgo.New(fmt.Sprintf("Bot %s", c.token))
 	c.session.AddHandler(c.OnMessageCreate)
 
 	err := c.session.Open()
-	if err != nil && c.Logger != nil {
-		c.Logger.Error().Err(err).Msg("error opening connection to Discord")
+	if err != nil {
+		c.logger.Error().Err(err).Msg("error opening connection to Discord")
+		return err
 	}
+
+	return nil
 }
 
 // OnMessageCreate is a DiscordGo Event Handler function.  This must be
@@ -110,13 +119,11 @@ func (c *Client) OnMessageCreate(ds *discordgo.Session, mc *discordgo.MessageCre
 
 	// Checa se o level é maior que que level do comando
 
-	if c.Logger != nil {
-		c.Logger.Debug().
-			Str("user", mc.Author.Username).
-			Str("user_id", mc.Author.ID).
-			Str("cmd", command).
-			Msg("Running command")
-	}
+	c.logger.Debug().
+		Str("user", mc.Author.Username).
+		Str("user_id", mc.Author.ID).
+		Str("cmd", command).
+		Msg("Running command")
 
 	cmd.Run(&Context{
 		Content: strings.TrimSpace(mc.Content),
@@ -131,10 +138,6 @@ func (c *Client) OnMessageCreate(ds *discordgo.Session, mc *discordgo.MessageCre
 
 // AddCommand adds a new command to the client
 func (c *Client) AddCommand(cmd *Command) {
-	if c.Logger != nil {
-		c.Logger.Debug().Str("cmd", cmd.Name).Msg("Adding Command")
-	}
-
 	c.commands[cmd.Name] = cmd
 
 	for _, a := range cmd.Aliases {
@@ -142,19 +145,16 @@ func (c *Client) AddCommand(cmd *Command) {
 	}
 }
 
-func (c *Client) permLevel(*discordgo.Message) int {
-	// sort.Slice(c.Config, func(i, j int) bool { c.Config[i] < c.Config[j] })
-	return 0
-}
-
-// Start runs the bot
-func (c *Client) Start() {
-
-}
-
 // Stop stops the bot
 func (c *Client) Stop() {
 	if c.session != nil {
 		c.session.Close()
 	}
+}
+
+// SendMessage sends a message to the specified channel
+func (c *Client) SendMessage(channelID, content string) error {
+	_, err := c.session.ChannelMessageSend(channelID, content)
+
+	return err
 }
