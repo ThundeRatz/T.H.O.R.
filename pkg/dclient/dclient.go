@@ -48,18 +48,12 @@ type Client struct {
 	token    string
 }
 
-// New creates a new client
-func New() *Client {
-	return &Client{
-		aliases:  make(map[string]string),
-		commands: make(map[string]*Command),
-	}
-}
-
 // Init initializes a client with a provided token and logger
 func (c *Client) Init(token string, logger *zerolog.Logger) error {
 	c.logger = logger.With().Str("pkg", "dclient").Logger()
 	c.token = token
+	c.aliases = make(map[string]string)
+	c.commands = make(map[string]*Command)
 
 	c.logger.Debug().Msg("Initializing discord client")
 
@@ -138,6 +132,8 @@ func (c *Client) OnMessageCreate(ds *discordgo.Session, mc *discordgo.MessageCre
 
 // AddCommand adds a new command to the client
 func (c *Client) AddCommand(cmd *Command) {
+	c.logger.Debug().Str("cmd", cmd.Name).Msg("Adding command")
+
 	c.commands[cmd.Name] = cmd
 
 	for _, a := range cmd.Aliases {

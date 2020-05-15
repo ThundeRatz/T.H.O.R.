@@ -1,31 +1,43 @@
 package cli
 
 import (
-	"os"
-	"os/signal"
-	"syscall"
+	"net/rpc"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"thunderatz.org/thor/services/discord"
+	"thunderatz.org/thor/core"
 )
 
 var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Run T.H.O.R.",
 	Run: func(cmd *cobra.Command, args []string) {
-		discordToken := viper.GetString("discord.token")
+		core.Start()
+	},
+}
 
-		if discordToken == "" {
-			logger.Fatal().Msg("Discord token can't be empty")
+var testCmd = &cobra.Command{
+	Use: "test [msg]",
+
+	Args: cobra.ExactArgs(1),
+
+	Run: func(cmd *cobra.Command, args []string) {
+		conn, err := rpc.Dial("unix", viper.GetString("core.socket"))
+
+		if err != nil {
+			logger.Fatal().Err(err).Msg("Failed to send")
 		}
+		defer conn.Close()
 
-		discord.Init(discordToken, &logger)
+		ans := core.SendReply{}
 
-		sc := make(chan os.Signal, 1)
-		signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+		conn.Call("ThorCore.SendDiscordAlert", core.SendArgs{Msg: args[0]}, &ans)
 
-		<-sc
+		if ans.Success {
+			logger.Info().Msg("Done")
+		} else {
+			logger.Info().Msg("Error")
+		}
 	},
 }
 
@@ -35,4 +47,5 @@ func init() {
 	viper.BindPFlag("discord.token", startCmd.PersistentFlags().Lookup("dtoken"))
 
 	rootCmd.AddCommand(startCmd)
+	rootCmd.AddCommand(testCmd)
 }

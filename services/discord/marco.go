@@ -34,7 +34,3 @@ var marcoCmd = &dclient.Command{
 		c.Session.ChannelMessageEdit(c.Message.ChannelID, msg.ID, fmt.Sprintf("%s %dms", a, (t1.UnixNano()-t2.UnixNano())/1000000))
 	},
 }
-
-func init() {
-	client.AddCommand(marcoCmd)
-}

@@ -3,40 +3,46 @@ package discord
 
 import (
 	"github.com/rs/zerolog"
-	"github.com/spf13/viper"
 	"thunderatz.org/thor/pkg/dclient"
 )
 
-var (
-	client = dclient.New()
+var ()
+
+// Service is the main discord service struct
+type Service struct {
+	AlertChannel string
+	Token        string
+
+	client *dclient.Client
 	logger zerolog.Logger
-)
+}
 
 // Init initializes discord service
-func Init(token string, _logger *zerolog.Logger) {
-	logger = _logger.With().Str("serv", "discord").Logger()
+func (ds *Service) Init(_logger *zerolog.Logger) error {
+	ds.logger = _logger.With().Str("serv", "discord").Logger()
+	ds.client = &dclient.Client{}
 
-	err := client.Init(token, &logger)
+	err := ds.client.Init(ds.Token, &ds.logger)
 
 	if err != nil {
-		return
+		return err
 	}
+
+	ds.client.AddCommand(marcoCmd)
+
+	return nil
 }
 
 // SendMessage sends a message to the specified alert channel
-func SendMessage(content string) {
-	alertChannel := viper.GetString("discord.alert_channel_id")
-
-	err := client.SendMessage(alertChannel, content)
+func (ds *Service) SendMessage(content string) error {
+	err := ds.client.SendMessage(ds.AlertChannel, content)
 
 	if err != nil {
-		logger.Error().
+		ds.logger.Error().
 			Err(err).
-			Str("channel", alertChannel).
+			Str("channel", ds.AlertChannel).
 			Msg("Couldn't send message to channel")
 	}
-}
 
-// Start starts discord service
-func Start() {
+	return err
 }

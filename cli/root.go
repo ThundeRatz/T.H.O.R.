@@ -29,6 +29,12 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.thor)")
 	rootCmd.PersistentFlags().CountP("verbose", "v", "Verbosity")
+	rootCmd.PersistentFlags().String("socket", "v", "Verbosity")
+
+	viper.BindPFlag("core.verbosity", rootCmd.PersistentFlags().Lookup("verbose"))
+	viper.BindPFlag("core.socket", rootCmd.PersistentFlags().Lookup("socket"))
+
+	viper.SetDefault("core.socket", "/tmp/thor.sock")
 }
 
 func initConfig() {
