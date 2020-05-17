@@ -63,6 +63,7 @@ func (c *Client) Init(token string, logger *zerolog.Logger) error {
 
 	c.session, _ = discordgo.New(fmt.Sprintf("Bot %s", c.token))
 	c.session.AddHandler(c.OnMessageCreate)
+	c.session.AddHandler(c.OnReady)
 
 	err := c.session.Open()
 	if err != nil {
@@ -130,6 +131,25 @@ func (c *Client) OnMessageCreate(ds *discordgo.Session, mc *discordgo.MessageCre
 	// StopTyping
 }
 
+// OnReady is a DiscordGo Event Handler function.  This must be
+// registered using the DiscordGo.Session.AddHandler function.  This function
+// will be called once the client is ready.
+func (c *Client) OnReady(ds *discordgo.Session, r *discordgo.Ready) {
+	c.logger.Info().Msg("Discord client ready")
+
+	err := ds.UpdateStatusComplex(discordgo.UpdateStatusData{
+		Game: &discordgo.Game{
+			Name: "WCXV",
+			Type: discordgo.GameTypeStreaming,
+			URL:  "https://youtube.com/watch?v=XZHTBcfhZwg",
+		},
+	})
+
+	if err != nil {
+		c.logger.Error().Err(err)
+	}
+}
+
 // AddCommand adds a new command to the client
 func (c *Client) AddCommand(cmd *Command) {
 	c.logger.Debug().Str("cmd", cmd.Name).Msg("Adding command")
@@ -144,6 +164,7 @@ func (c *Client) AddCommand(cmd *Command) {
 // Stop stops the bot
 func (c *Client) Stop() {
 	if c.session != nil {
+		c.logger.Info().Msg("Closing discord client")
 		c.session.Close()
 	}
 }
