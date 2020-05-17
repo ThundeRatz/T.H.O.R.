@@ -47,7 +47,7 @@ func New(addr, user, password, base string, port int) (*Conn, error) {
 	}, nil
 }
 
-// Mkdir creates the sirectory in the remote path, relative to static base path
+// Mkdir creates the directory in the remote path, relative to static base path
 func (sc *Conn) Mkdir(path string, makeParents bool) error {
 	fullPath := sc.BasePath + path
 
