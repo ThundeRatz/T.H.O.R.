@@ -27,9 +27,9 @@ func Execute() error {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.thor)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "$HOME/.thor", "config file")
 	rootCmd.PersistentFlags().CountP("verbose", "v", "Verbosity")
-	rootCmd.PersistentFlags().String("socket", "v", "Verbosity")
+	rootCmd.PersistentFlags().String("socket", "/tmp/thor.sock", "Unix socket where thor is running/should run")
 
 	viper.BindPFlag("core.verbosity", rootCmd.PersistentFlags().Lookup("verbose"))
 	viper.BindPFlag("core.socket", rootCmd.PersistentFlags().Lookup("socket"))

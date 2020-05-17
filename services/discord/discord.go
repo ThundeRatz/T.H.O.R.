@@ -29,8 +29,13 @@ func (ds *Service) Init(_logger *zerolog.Logger) error {
 	}
 
 	ds.client.AddCommand(marcoCmd)
+	ds.client.AddCommand(infoCmd)
 
 	return nil
+}
+
+func (ds *Service) Stop() {
+	ds.client.Stop()
 }
 
 // SendMessage sends a message to the specified alert channel

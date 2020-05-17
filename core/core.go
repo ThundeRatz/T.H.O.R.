@@ -9,6 +9,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
+	"thunderatz.org/thor/core/types"
 	"thunderatz.org/thor/services/discord"
 )
 
@@ -55,26 +56,6 @@ func initServices() {
 	initDiscordService()
 }
 
-type SendArgs struct {
-	Msg string
-}
-
-type SendReply struct {
-	Success bool
-}
-
-func (tc *ThorCore) SendDiscordAlert(args SendArgs, reply *SendReply) error {
-	logger.Debug().Str("msg", args.Msg).Msg("Received discord alert request")
-
-	err := DiscordService.SendMessage(args.Msg)
-	if err != nil {
-		reply.Success = false
-	} else {
-		reply.Success = true
-	}
-	return nil
-}
-
 func initSocket() net.Listener {
 	socket := viper.GetString("core.socket")
 
@@ -96,6 +77,19 @@ func initSocket() net.Listener {
 	return la
 }
 
+// SendDiscordAlert sends an alert to the alert discord channel
+func (tc *ThorCore) SendDiscordAlert(args types.SendArgs, reply *types.SendReply) error {
+	logger.Debug().Str("msg", args.Msg).Msg("Received discord alert request")
+
+	err := DiscordService.SendMessage(args.Msg)
+	if err != nil {
+		reply.Success = false
+	} else {
+		reply.Success = true
+	}
+	return nil
+}
+
 // Start starts the core T.H.O.R. process
 func Start() {
 	initLogger()
@@ -104,6 +98,7 @@ func Start() {
 	defer sock.Close()
 
 	initServices()
+	defer DiscordService.Stop()
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
