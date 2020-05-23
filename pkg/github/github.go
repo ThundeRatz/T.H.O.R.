@@ -1,4 +1,4 @@
-// Package github wraps google/go-github for use with T.H.O.R. CLI
+// Package github wraps google/go-github for use with T.H.O.R.
 // it's meant to access organization data only
 package github
 
