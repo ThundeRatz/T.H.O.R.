@@ -30,6 +30,7 @@ func (ds *Service) Init(_logger *zerolog.Logger) error {
 
 	ds.client.AddCommand(marcoCmd)
 	ds.client.AddCommand(infoCmd)
+	ds.client.AddHelpCmd()
 
 	return nil
 }

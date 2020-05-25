@@ -4,6 +4,7 @@ package dclient
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
@@ -159,6 +160,73 @@ func (c *Client) AddCommand(cmd *Command) {
 	for _, a := range cmd.Aliases {
 		c.aliases[a] = cmd.Name
 	}
+}
+
+// Help is a built-in help command
+func (c *Client) Help(ctx *Context) {
+	if len(ctx.Args) == 0 {
+
+		embed := &discordgo.MessageEmbed{
+			Color: 0xe800ff,
+			Author: &discordgo.MessageEmbedAuthor{
+				Name:    "Olá! Thor aqui!",
+				IconURL: "https://static.thunderatz.org/ThorJoinha.png",
+				URL:     "https://thunderatz.org",
+			},
+			Description: "Aqui você pode ver todos os comandos que eu conheço.",
+			Timestamp:   time.Now().Format(time.RFC3339),
+			Footer: &discordgo.MessageEmbedFooter{
+				Text:    "ThundeRatz",
+				IconURL: "https://static.thunderatz.org/ThorJoinha.png",
+			},
+		}
+
+		values := ""
+		for _, v := range c.commands {
+			values += "`" + v.Name + "`, "
+		}
+		values = strings.TrimSuffix(values, ", ")
+
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:  "Commands",
+			Value: values,
+		})
+
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:  "\u200b",
+			Value: "**Use `.help <comando>` para ajuda mais específica.**",
+		})
+
+		c.session.ChannelMessageSendEmbed(ctx.Message.ChannelID, embed)
+	} else {
+		cmd := ctx.Args[0]
+
+		if cmd, ok := c.commands[cmd]; ok && cmd.Enabled {
+			msg := "```asciidoc\n"
+			msg += "= " + cmd.Name + " = \n"
+			msg += cmd.Description + "\n"
+			msg += "usage:: " + cmd.Usage + "\n"
+			msg += "aliases:: " + strings.Join(cmd.Aliases, ", ") + "```"
+
+			c.session.ChannelMessageSend(ctx.Message.ChannelID, msg)
+		}
+	}
+}
+
+// AddHelpCmd adds the built-in help command to the list of commands
+func (c *Client) AddHelpCmd() {
+	c.AddCommand(&Command{
+		Run: c.Help,
+
+		Aliases:     []string{"h"},
+		Category:    "Geral",
+		Description: "Mostra todos os comandos disponíveis, ou detalhes de um comando específico.",
+		Usage:       "help [command]",
+		Enabled:     true,
+		GuildOnly:   false,
+		Name:        "help",
+		PermLevel:   "User",
+	})
 }
 
 // Stop stops the bot
