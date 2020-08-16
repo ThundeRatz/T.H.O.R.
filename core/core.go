@@ -1,16 +1,20 @@
 package core
 
 import (
-	"net"
-	"net/rpc"
+	"context"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
+
 	"thunderatz.org/thor/core/types"
 	"thunderatz.org/thor/services/discord"
+	"thunderatz.org/thor/services/github"
 )
 
 var logger zerolog.Logger
@@ -21,7 +25,24 @@ type ThorCore struct{}
 // Services
 var (
 	DiscordService *discord.Service
+	GitHubService  *github.Service
 )
+
+var (
+	MsgCh types.CoreMsgCh
+	root  *mux.Router
+)
+
+func init() {
+	root = mux.NewRouter()
+
+	root.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			logger.Debug().Str("url", r.URL.String()).Msg("New Request")
+			next.ServeHTTP(w, r)
+		})
+	})
+}
 
 // Initialize logger
 func initLogger() {
@@ -45,63 +66,84 @@ func initDiscordService() {
 		Token:        viper.GetString("discord.token"),
 	}
 
-	err := DiscordService.Init(&logger)
+	err := DiscordService.Init(&logger, MsgCh)
 
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Couldn't start discord service")
 	}
 }
 
+func initGitHubService() {
+	ghRouter := root.PathPrefix("/gh").Subrouter()
+
+	GitHubService = &github.Service{
+		AppID:          viper.GetInt64("github.app_id"),
+		InstallationID: viper.GetInt64("github.installation_id"),
+		PEMFile:        viper.GetString("github.pem_file"),
+		WebhookSecret:  viper.GetString("github.webhook_secret"),
+	}
+
+	GitHubService.Init(&logger, ghRouter, MsgCh)
+}
+
 func initServices() {
 	initDiscordService()
+	initGitHubService()
 }
 
-func initSocket() net.Listener {
-	socket := viper.GetString("core.socket")
-
-	if err := os.RemoveAll(socket); err != nil {
-		logger.Error().Err(err).Send()
+func initAPI() *http.Server {
+	srv := &http.Server{
+		Addr:         "0.0.0.0:8080",
+		WriteTimeout: time.Second * 15,
+		ReadTimeout:  time.Second * 15,
+		IdleTimeout:  time.Second * 60,
+		Handler:      root,
 	}
 
-	rpcServer := rpc.NewServer()
-	rpcServer.Register(&ThorCore{})
+	go func() {
+		logger.Info().Msg("Starting API server")
 
-	la, err := net.Listen("unix", socket)
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Failed to start rpc server")
-	}
+		if err := http.ListenAndServe(":8080", root); err != nil {
+			logger.Error().Err(err).Send()
+		}
+	}()
 
-	go rpcServer.Accept(la)
-
-	logger.Info().Msg("Core RPC server initialized")
-	return la
+	return srv
 }
 
-// SendDiscordAlert sends an alert to the alert discord channel
-func (tc *ThorCore) SendDiscordAlert(args types.SendArgs, reply *types.SendReply) error {
-	logger.Debug().Str("msg", args.Msg).Msg("Received discord alert request")
+func process() {
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 
-	err := DiscordService.SendMessage(args.Msg)
-	if err != nil {
-		reply.Success = false
-	} else {
-		reply.Success = true
+	for {
+		select {
+		case msg := <-MsgCh:
+			logger.Info().Int("type", int(msg.Type)).Msg("Received Message")
+			go ProcessMsg(msg)
+
+		case <-sc:
+			return
+		}
 	}
-	return nil
 }
 
 // Start starts the core T.H.O.R. process
 func Start() {
-	initLogger()
+	MsgCh = make(types.CoreMsgCh, 10)
 
-	sock := initSocket()
-	defer sock.Close()
+	initLogger()
 
 	initServices()
 	defer DiscordService.Stop()
 
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	server := initAPI()
 
-	<-sc
+	process()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	server.Shutdown(ctx)
+
+	logger.Info().Msg("Shutting down")
+	os.Exit(0)
 }

@@ -16,11 +16,11 @@ const (
 // A Client manages communication with ThundeRatz API
 type Client struct {
 	clientMu sync.Mutex
-	client *http.Client
+	client   *http.Client
 
 	logger zerolog.Logger
 
-	BaseURL *url.URL
+	BaseURL   *url.URL
 	UserAgent string
 }
 
@@ -33,8 +33,8 @@ func NewClient(httpClient *http.Client) *Client {
 
 	baseURL, _ := url.Parse(defaultBaseURL)
 	c := &Client{
-		client: httpClient,
-		BaseURL: baseURL,
+		client:    httpClient,
+		BaseURL:   baseURL,
 		UserAgent: userAgent,
 	}
 

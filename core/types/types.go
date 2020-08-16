@@ -1,35 +1,57 @@
-// Package types exposes types for the core rpc exposed functions
+// Package types exposes types for the services to communicate with the core
 package types
 
-type (
-	// SendArgs is the arguments for the ThorCore.SendDiscordAlert function
-	SendArgs struct {
-		Msg string
-	}
-
-	// SendReply is the reply for the ThorCore.SendDiscordAlert function
-	SendReply struct {
-		Success bool
-	}
+import (
+	"github.com/google/go-github/v29/github"
+	"thunderatz.org/thor/pkg/gclient"
 )
 
+// Msg and Reply Channels
 type (
-	// PingArgs is the arguments for the ThorCore.Ping function
-	PingArgs struct{}
-
-	// PingReply is the reply for the ThorCore.Ping function
-	PingReply struct {
-		Success bool
-	}
+	CoreMsgCh   chan CoreMsg
+	CoreReplyCh chan CoreReply
 )
 
-type (
-	// InfoArgs is the arguments for the ThorCore.Info function
-	InfoArgs struct{}
+// CoreMsg represents a Msg received by the core via a CoreMsgCh
+type CoreMsg struct {
+	Type  CoreMsgType
+	Reply CoreReplyCh
 
-	// InfoReply is the reply for the ThorCore.Info function
-	InfoReply struct {
-		NGoRoutines int
-		Success     bool
-	}
+	// Args must be one of the *Args related to the CoreMsg Type
+	Args interface{}
+}
+
+// CoreReply represents a Msg sent by the core via a CoreReplyCh
+type CoreReply struct {
+	Success bool
+
+	// Reply must be one of the *Reply related to the CoreMsg Type
+	Reply interface{}
+}
+
+// CoreMsgType represents a message type that the core can process
+type CoreMsgType int
+
+// CoreMsgType constants
+const (
+	PingMsg CoreMsgType = iota
+	InfoMsg
+	GitHubStatsMsg
+	GitHubEventMsg
 )
+
+// GitHubEventArgs represents data sent by the GitHub Webhook service
+type GitHubEventArgs struct {
+	Issue      *github.Issue
+	Repository *github.Repository
+}
+
+// InfoReply is the reply for the Info function
+type InfoReply struct {
+	NGoRoutines int
+}
+
+// GitHubStatsReply is the reply for the GitHub Service GetStats function function
+type GitHubStatsReply struct {
+	RepoStats gclient.RepoStats
+}

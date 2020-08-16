@@ -18,6 +18,7 @@ type Context struct {
 	Args            []string
 	Settings        map[string]string // Prefix
 	AuthorPermLevel string
+	Logger          zerolog.Logger
 
 	Session *discordgo.Session
 	Message *discordgo.Message
@@ -118,7 +119,7 @@ func (c *Client) OnMessageCreate(ds *discordgo.Session, mc *discordgo.MessageCre
 	c.logger.Debug().
 		Str("user", mc.Author.Username).
 		Str("user_id", mc.Author.ID).
-		Str("cmd", command).
+		Str("command", command).
 		Msg("Running command")
 
 	cmd.Run(&Context{
@@ -127,6 +128,7 @@ func (c *Client) OnMessageCreate(ds *discordgo.Session, mc *discordgo.MessageCre
 		Args:    args,
 		Session: ds,
 		Message: mc.Message,
+		Logger:  c.logger.With().Str("cmd", command).Logger(),
 	})
 
 	// StopTyping
@@ -203,7 +205,7 @@ func (c *Client) Help(ctx *Context) {
 
 		if cmd, ok := c.commands[cmd]; ok && cmd.Enabled {
 			msg := "```asciidoc\n"
-			msg += "= " + cmd.Name + " = \n"
+			msg += "= " + cmd.Name + " =\n"
 			msg += cmd.Description + "\n"
 			msg += "usage:: " + cmd.Usage + "\n"
 			msg += "aliases:: " + strings.Join(cmd.Aliases, ", ") + "```"
@@ -240,6 +242,13 @@ func (c *Client) Stop() {
 // SendMessage sends a message to the specified channel
 func (c *Client) SendMessage(channelID, content string) error {
 	_, err := c.session.ChannelMessageSend(channelID, content)
+
+	return err
+}
+
+// SendEmbed sends an embed message to the specified channel
+func (c *Client) SendEmbed(channelID string, embed *discordgo.MessageEmbed) error {
+	_, err := c.session.ChannelMessageSendEmbed(channelID, embed)
 
 	return err
 }

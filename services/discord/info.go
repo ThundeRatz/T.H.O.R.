@@ -2,9 +2,7 @@ package discord
 
 import (
 	"fmt"
-	"net/rpc"
 
-	"github.com/spf13/viper"
 	"thunderatz.org/thor/core/types"
 	"thunderatz.org/thor/pkg/dclient"
 )
@@ -21,20 +19,18 @@ var infoCmd = &dclient.Command{
 	PermLevel: "User",
 
 	Run: func(c *dclient.Context) {
-		conn, err := rpc.Dial("unix", viper.GetString("core.socket"))
-
-		if err != nil {
-			c.Session.ChannelMessageSend(c.Message.ChannelID, "Failed to connect to T.H.O.R. core")
-			return
+		replyCh := make(types.CoreReplyCh)
+		msgCh <- types.CoreMsg{
+			Type:  types.InfoMsg,
+			Reply: replyCh,
 		}
-		defer conn.Close()
 
-		ans := types.InfoReply{}
-		conn.Call("ThorCore.Info", types.InfoArgs{}, &ans)
+		reply := <-replyCh
+		ans := reply.Reply.(*types.InfoReply)
 
 		var msg = ""
-		if ans.Success == true {
-			msg = fmt.Sprintf("gor: %d", ans.NGoRoutines)
+		if reply.Success == true {
+			msg = fmt.Sprintf("Got: %d", ans.NGoRoutines)
 		} else {
 			msg = "Error"
 		}

@@ -3,10 +3,14 @@ package discord
 
 import (
 	"github.com/rs/zerolog"
+
+	"thunderatz.org/thor/core/types"
 	"thunderatz.org/thor/pkg/dclient"
 )
 
-var ()
+var (
+	msgCh types.CoreMsgCh
+)
 
 // Service is the main discord service struct
 type Service struct {
@@ -18,9 +22,10 @@ type Service struct {
 }
 
 // Init initializes discord service
-func (ds *Service) Init(_logger *zerolog.Logger) error {
+func (ds *Service) Init(_logger *zerolog.Logger, _ch types.CoreMsgCh) error {
 	ds.logger = _logger.With().Str("serv", "discord").Logger()
 	ds.client = &dclient.Client{}
+	msgCh = _ch
 
 	err := ds.client.Init(ds.Token, &ds.logger)
 
@@ -30,11 +35,13 @@ func (ds *Service) Init(_logger *zerolog.Logger) error {
 
 	ds.client.AddCommand(marcoCmd)
 	ds.client.AddCommand(infoCmd)
+	ds.client.AddCommand(githubCmd)
 	ds.client.AddHelpCmd()
 
 	return nil
 }
 
+// Stop stops the service
 func (ds *Service) Stop() {
 	ds.client.Stop()
 }

@@ -1,20 +1,19 @@
-// Package github wraps google/go-github for use with T.H.O.R.
-// it's meant to access organization data only
-package github
+// Package gclient wraps google/go-github for use with T.H.O.R.
+package gclient
 
 import (
 	"context"
+	"net/http"
 	"time"
 
-	"github.com/google/go-github/v31/github"
+	"github.com/bradleyfalzon/ghinstallation"
+	"github.com/google/go-github/v29/github"
 	"github.com/rs/zerolog"
-	"golang.org/x/oauth2"
 )
 
 // Client holds connection data
 type Client struct {
-	org *github.Organization
-	c   *github.Client
+	c *github.Client
 
 	logger zerolog.Logger
 }
@@ -27,32 +26,54 @@ type RepoStats struct {
 	Commits map[string]int
 }
 
-// New creates a new GitHub client with the provided access token
-// and organization name
-func New(token, orgName string, logger *zerolog.Logger) (*Client, error) {
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
+// NewInstallationClient creates a new GitHub client for installations
+func NewInstallationClient(appID, instID int64, PEMFile string, logger *zerolog.Logger) (*Client, error) {
+	tr := http.DefaultTransport
+
+	itr, err := ghinstallation.NewKeyFromFile(
+		tr,
+		appID,
+		instID,
+		PEMFile,
 	)
-
-	tc := oauth2.NewClient(context.Background(), ts)
-	client := github.NewClient(tc)
-
-	org, _, err := client.Organizations.Get(context.Background(), orgName)
 
 	if err != nil {
 		return nil, err
 	}
 
+	c := github.NewClient(&http.Client{Transport: itr})
+
 	return &Client{
-		org:    org,
-		c:      client,
-		logger: logger.With().Str("pkg", "github").Logger(),
+		c:      c,
+		logger: logger.With().Str("pkg", "gclient").Logger(),
+	}, nil
+}
+
+// NewAppClient creates a new GitHub client for apps
+func NewAppClient(appID int64, PEMFile string, logger *zerolog.Logger) (*Client, error) {
+	tr := http.DefaultTransport
+
+	itr, err := ghinstallation.NewAppsTransportKeyFromFile(
+		tr,
+		appID,
+		PEMFile,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	c := github.NewClient(&http.Client{Transport: itr})
+
+	return &Client{
+		c:      c,
+		logger: logger.With().Str("pkg", "gclient").Logger(),
 	}, nil
 }
 
 // GetRepositories returns a slice of all repository names for the organization
-func (gh *Client) GetRepositories() []string {
-	repos, _, _ := gh.c.Repositories.ListByOrg(context.Background(), gh.org.GetLogin(), &github.RepositoryListByOrgOptions{
+func (gc *Client) GetRepositories(orgName string) []string {
+	repos, _, _ := gc.c.Repositories.ListByOrg(context.Background(), orgName, &github.RepositoryListByOrgOptions{
 		ListOptions: github.ListOptions{PerPage: 100},
 	})
 
@@ -66,8 +87,8 @@ func (gh *Client) GetRepositories() []string {
 }
 
 // GetMembers returns a slice of all members users for the organization
-func (gh *Client) GetMembers() []string {
-	members, _, _ := gh.c.Organizations.ListMembers(context.Background(), "ThundeRatz", &github.ListMembersOptions{
+func (gc *Client) GetMembers(orgName string) []string {
+	members, _, _ := gc.c.Organizations.ListMembers(context.Background(), orgName, &github.ListMembersOptions{
 		ListOptions: github.ListOptions{PerPage: 100},
 	})
 
@@ -81,9 +102,9 @@ func (gh *Client) GetMembers() []string {
 }
 
 // GetStats returns contributor statistics for all repositories in the organization
-func (gh *Client) GetStats() RepoStats {
-	repos := gh.GetRepositories()
-	members := gh.GetMembers()
+func (gc *Client) GetStats(orgName string) RepoStats {
+	repos := gc.GetRepositories(orgName)
+	members := gc.GetMembers(orgName)
 
 	repoStats := RepoStats{
 		Adds:    make(map[string]int),
@@ -98,19 +119,19 @@ func (gh *Client) GetStats() RepoStats {
 	}
 
 	for _, r := range repos {
-		gh.logger.Info().
+		gc.logger.Info().
 			Str("repo", r).
 			Msg("Processing Repository")
 
-		stats, resp, err := gh.c.Repositories.ListContributorsStats(context.Background(), gh.org.GetLogin(), r)
+		stats, resp, err := gc.c.Repositories.ListContributorsStats(context.Background(), orgName, r)
 
 		for resp.StatusCode == 202 {
 			time.Sleep(500 * time.Millisecond)
-			stats, resp, err = gh.c.Repositories.ListContributorsStats(context.Background(), gh.org.GetLogin(), r)
+			stats, resp, err = gc.c.Repositories.ListContributorsStats(context.Background(), orgName, r)
 		}
 
 		if err != nil {
-			gh.logger.Error().
+			gc.logger.Error().
 				Err(err).
 				Send()
 
