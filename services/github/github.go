@@ -2,7 +2,6 @@ package github
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
@@ -46,34 +45,36 @@ func (ghs *Service) process(w http.ResponseWriter, r *http.Request) {
 
 	switch githubEvent := r.Header.Get("X-GitHub-Event"); githubEvent {
 	case "issues":
-		msgCh <- types.CoreMsg{
-			Type:  types.GitHubEventMsg,
-			Reply: nil,
-			Args: types.GitHubEventArgs{
-				Issue:      &payload.Issue,
-				Repository: &payload.Repo,
-			},
-		}
-
 		if payload.Action == "opened" {
+			if msgCh != nil {
+				msgCh <- types.CoreMsg{
+					Type:  types.GitHubEventMsg,
+					Reply: nil,
+					Args: types.GitHubEventArgs{
+						Issue:      &payload.Issue,
+						Repository: &payload.Repo,
+					},
+				}
+			}
+
 			issue := payload.Issue
 			ghs.logger.Info().Int("issue", issue.GetNumber()).Str("repository", payload.Repo.GetName()).Msg("New Issue created")
 		}
 
-	case "issue_comment":
-		msgCh <- types.CoreMsg{
-			Type:  types.GitHubEventMsg,
-			Reply: nil,
-			Args: types.GitHubEventArgs{
-				Issue:      &payload.Issue,
-				Repository: &payload.Repo,
-			},
-		}
+	// case "issue_comment":
+	// 	if payload.Action == "created" {
+	// 		msgCh <- types.CoreMsg{
+	// 			Type:  types.GitHubEventMsg,
+	// 			Reply: nil,
+	// 			Args: types.GitHubEventArgs{
+	// 				Issue:      &payload.Issue,
+	// 				Repository: &payload.Repo,
+	// 			},
+	// 		}
 
-		if payload.Action == "created" {
-			comment := strings.TrimSpace(*payload.IssueComment.Body)
-			ghs.logger.Info().Str("comment", comment).Msg("Received issue comment")
-		}
+	// 		comment := strings.TrimSpace(*payload.IssueComment.Body)
+	// 		ghs.logger.Info().Str("comment", comment).Msg("Received issue comment")
+	// 	}
 
 	default:
 		ghs.logger.Error().Str("Request ID", requestID).Str("event type", githubEvent).Msg("No Handler")

@@ -38,8 +38,15 @@ func ProcessMsg(msg types.CoreMsg) {
 	case types.GitHubEventMsg:
 		logger.Debug().Msg("Received GitHubEvent request")
 		args := msg.Args.(types.GitHubEventArgs)
+		issue := args.Issue
+		repo := args.Repository
 
-		DiscordService.SendGitHubIssueAlert(args.Issue, args.Repository.GetName())
+		DiscordService.SendGitHubIssueAlert(issue, repo.GetName())
+
+		// For now, will only comment back on vss_simulaton repo
+		if repo.GetName() == "vss_simulation" {
+			GitHubService.SendDefaultVSSIssueMessage(issue.GetNumber())
+		}
 	}
 }
 

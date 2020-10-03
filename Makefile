@@ -25,4 +25,4 @@ bin:
 clean:
 	@-rm -rf bin
 
-.PHONY: build
+.PHONY: all build clean

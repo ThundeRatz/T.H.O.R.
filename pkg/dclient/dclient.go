@@ -171,15 +171,13 @@ func (c *Client) Help(ctx *Context) {
 		embed := &discordgo.MessageEmbed{
 			Color: 0xe800ff,
 			Author: &discordgo.MessageEmbedAuthor{
-				Name:    "Olá! Thor aqui!",
-				IconURL: "https://static.thunderatz.org/ThorJoinha.png",
+				Name:    "Ajuda",
 				URL:     "https://thunderatz.org",
 			},
 			Description: "Aqui você pode ver todos os comandos que eu conheço.",
 			Timestamp:   time.Now().Format(time.RFC3339),
 			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "ThundeRatz",
-				IconURL: "https://static.thunderatz.org/ThorJoinha.png",
+				Text:    "T.H.O.R | ThundeRatz",
 			},
 		}
 

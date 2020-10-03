@@ -46,11 +46,6 @@ func init() {
 
 // Initialize logger
 func initLogger() {
-	logger = zerolog.New(zerolog.NewConsoleWriter()).
-		With().
-		Timestamp().
-		Logger()
-
 	if v := viper.GetInt("core.verbosity"); v >= 2 {
 		logger = logger.Level(zerolog.DebugLevel)
 	} else if v == 1 {
@@ -93,7 +88,7 @@ func initServices() {
 
 func initAPI() *http.Server {
 	srv := &http.Server{
-		Addr:         "0.0.0.0:8080",
+		Addr:         "127.0.0.1:8080",
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
@@ -111,7 +106,7 @@ func initAPI() *http.Server {
 	return srv
 }
 
-func process() {
+func processForever() {
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 
@@ -140,7 +135,7 @@ func Start() {
 
 	server := initAPI()
 
-	process()
+	processForever()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
