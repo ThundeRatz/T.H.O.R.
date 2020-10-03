@@ -5,10 +5,8 @@
 ---
 
 <!--
-- Falar que começa com o thor start, a parte de config e flags ta no cli/
+- Falar que começa com o thor start, a parte de config 
 - Connects to ThundeRatz services (Server, GitHub, Discord, G Suite, etc ...)
   - O que faz em cada
-- Has a CLI
-  - Explicacao da CLI
 - Config
 -->

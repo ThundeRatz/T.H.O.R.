@@ -10,6 +10,7 @@ import (
 	"thunderatz.org/thor/core/types"
 )
 
+// Service represents the GitHub service.
 type Service struct {
 	AppID          int64
 	InstallationID int64
@@ -23,6 +24,7 @@ var (
 	msgCh types.CoreMsgCh
 )
 
+// Init initializes a GitHub service and adds its endpoint to the mux
 func (ghs *Service) Init(_logger *zerolog.Logger, r *mux.Router, _ch types.CoreMsgCh) {
 	ghs.logger = _logger.With().Str("serv", "github").Logger()
 	msgCh = _ch

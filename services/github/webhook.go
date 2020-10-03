@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-github/v29/github"
 )
 
+// WebhookAPIRequest represents the payload received by GitHub
 type WebhookAPIRequest struct {
 	// Common
 	Action       string              `json:"action"`

@@ -3,6 +3,11 @@
 # and follows the TOML format, this should be placed
 # at your home directory or passed to the --config flag
 
+[core]
+verbosity = 0
+socket = ""
+settings_db = ""
+
 [server]
 addr = ""
 static.root = ""
@@ -11,10 +16,20 @@ password = ""
 ssh_port = 0
 
 [github]
-token = ""
 organization = ""
+app_id = 0
+installation_id = 0
+client_id = ""
+client_secret = ""
+webhook_secret = ""
+pem_file = ""
 
 [gitea]
 token = ""
 organization = ""
 base_url = ""
+
+[discord]
+token = ""
+prefix = ""
+alert_channel_id = ""

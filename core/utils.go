@@ -43,7 +43,7 @@ func ProcessMsg(msg types.CoreMsg) {
 	}
 }
 
-// Ping does nothing, can be used to check if core is up
+// Ping does nothing, can be used to check if core is up and response time
 func Ping() error {
 	logger.Debug().Msg("Received ping request")
 	return nil

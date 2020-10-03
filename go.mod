@@ -1,6 +1,6 @@
 module thunderatz.org/thor
 
-go 1.14
+go 1.15
 
 require (
 	code.gitea.io/sdk/gitea v0.11.3

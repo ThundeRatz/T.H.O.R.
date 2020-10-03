@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	defaultBaseURL = "https://api.thunderatz.com/"
+	defaultBaseURL = "https://api.thunderatz.org/"
 	userAgent      = "go-thunderapi"
 )
 

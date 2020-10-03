@@ -33,7 +33,7 @@ func (ds *Service) Init(_logger *zerolog.Logger, _ch types.CoreMsgCh) error {
 		return err
 	}
 
-	ds.client.AddCommand(marcoCmd)
+	ds.client.AddCommand(pingCmd)
 	ds.client.AddCommand(infoCmd)
 	ds.client.AddCommand(githubCmd)
 	ds.client.AddHelpCmd()

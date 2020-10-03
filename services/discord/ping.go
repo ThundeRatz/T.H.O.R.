@@ -8,7 +8,7 @@ import (
 	"thunderatz.org/thor/pkg/dclient"
 )
 
-var marcoCmd = &dclient.Command{
+var pingCmd = &dclient.Command{
 	Name:        "ping",
 	Category:    "Geral",
 	Description: "Vê a latência.",

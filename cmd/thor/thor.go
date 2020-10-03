@@ -1,9 +1,9 @@
 package main
 
 import (
-	"thunderatz.org/thor/cli"
+	"thunderatz.org/thor/core"
 )
 
 func main() {
-	cli.Execute()
+	core.Start()
 }

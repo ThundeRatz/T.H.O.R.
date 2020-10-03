@@ -36,3 +36,5 @@ bin/
 .history
 
 # End of https://www.gitignore.io/api/go,visualstudiocode
+
+*.pem

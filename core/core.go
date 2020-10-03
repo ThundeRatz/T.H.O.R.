@@ -129,6 +129,8 @@ func process() {
 
 // Start starts the core T.H.O.R. process
 func Start() {
+	initConfig()
+
 	MsgCh = make(types.CoreMsgCh, 10)
 
 	initLogger()
