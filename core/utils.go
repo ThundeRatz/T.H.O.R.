@@ -3,7 +3,7 @@ package core
 import (
 	"runtime"
 
-	"thunderatz.org/thor/core/types"
+	"go.thunderatz.org/thor/core/types"
 )
 
 func ProcessMsg(msg types.CoreMsg) {

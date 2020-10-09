@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sort"
 
-	"thunderatz.org/thor/core/types"
-	"thunderatz.org/thor/pkg/dclient"
-	"thunderatz.org/thor/pkg/gclient"
+	"go.thunderatz.org/thor/core/types"
+	"go.thunderatz.org/thor/pkg/dclient"
+	"go.thunderatz.org/thor/pkg/gclient"
 )
 
 func getOrderedStats(repoStats *gclient.RepoStats) string {

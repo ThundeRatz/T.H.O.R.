@@ -12,9 +12,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 
-	"thunderatz.org/thor/core/types"
-	"thunderatz.org/thor/services/discord"
-	"thunderatz.org/thor/services/github"
+	"go.thunderatz.org/thor/core/types"
+	"go.thunderatz.org/thor/services/discord"
+	"go.thunderatz.org/thor/services/github"
 )
 
 var logger zerolog.Logger

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"thunderatz.org/thor/core/types"
-	"thunderatz.org/thor/pkg/dclient"
+	"go.thunderatz.org/thor/core/types"
+	"go.thunderatz.org/thor/pkg/dclient"
 )
 
 var pingCmd = &dclient.Command{

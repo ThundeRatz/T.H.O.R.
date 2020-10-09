@@ -4,8 +4,8 @@ package discord
 import (
 	"github.com/rs/zerolog"
 
-	"thunderatz.org/thor/core/types"
-	"thunderatz.org/thor/pkg/dclient"
+	"go.thunderatz.org/thor/core/types"
+	"go.thunderatz.org/thor/pkg/dclient"
 )
 
 var (

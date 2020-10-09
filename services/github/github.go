@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 
-	"thunderatz.org/thor/core/types"
+	"go.thunderatz.org/thor/core/types"
 )
 
 // Service represents the GitHub service.
@@ -60,21 +60,6 @@ func (ghs *Service) process(w http.ResponseWriter, r *http.Request) {
 			issue := payload.Issue
 			ghs.logger.Info().Int("issue", issue.GetNumber()).Str("repository", payload.Repo.GetName()).Msg("New Issue created")
 		}
-
-	// case "issue_comment":
-	// 	if payload.Action == "created" {
-	// 		msgCh <- types.CoreMsg{
-	// 			Type:  types.GitHubEventMsg,
-	// 			Reply: nil,
-	// 			Args: types.GitHubEventArgs{
-	// 				Issue:      &payload.Issue,
-	// 				Repository: &payload.Repo,
-	// 			},
-	// 		}
-
-	// 		comment := strings.TrimSpace(*payload.IssueComment.Body)
-	// 		ghs.logger.Info().Str("comment", comment).Msg("Received issue comment")
-	// 	}
 
 	default:
 		ghs.logger.Error().Str("Request ID", requestID).Str("event type", githubEvent).Msg("No Handler")

@@ -1,6 +1,6 @@
 package github
 
-import "thunderatz.org/thor/pkg/gclient"
+import "go.thunderatz.org/thor/pkg/gclient"
 
 // SendDefaultVSSIssueMessage send the default message to newly created issues
 func (ghs *Service) SendDefaultVSSIssueMessage(issueNumber int) {

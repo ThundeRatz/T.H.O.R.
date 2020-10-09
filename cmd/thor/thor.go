@@ -1,7 +1,7 @@
 package main
 
 import (
-	"thunderatz.org/thor/core"
+	"go.thunderatz.org/thor/core"
 )
 
 func main() {

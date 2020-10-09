@@ -1,4 +1,4 @@
-module thunderatz.org/thor
+module go.thunderatz.org/thor
 
 go 1.15
 

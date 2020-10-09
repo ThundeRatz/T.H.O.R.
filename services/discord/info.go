@@ -3,8 +3,8 @@ package discord
 import (
 	"fmt"
 
-	"thunderatz.org/thor/core/types"
-	"thunderatz.org/thor/pkg/dclient"
+	"go.thunderatz.org/thor/core/types"
+	"go.thunderatz.org/thor/pkg/dclient"
 )
 
 var infoCmd = &dclient.Command{

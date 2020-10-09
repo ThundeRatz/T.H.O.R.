@@ -1,7 +1,7 @@
 package github
 
 import (
-	"thunderatz.org/thor/pkg/gclient"
+	"go.thunderatz.org/thor/pkg/gclient"
 )
 
 // GetRepositories returns a slice of all repository names for the organization

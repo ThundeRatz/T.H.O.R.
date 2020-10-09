@@ -3,7 +3,7 @@ package types
 
 import (
 	"github.com/google/go-github/v29/github"
-	"thunderatz.org/thor/pkg/gclient"
+	"go.thunderatz.org/thor/pkg/gclient"
 )
 
 // Msg and Reply Channels
