@@ -4,6 +4,8 @@
 
 ---
 
+[![PkgGoDev](https://pkg.go.dev/badge/go.thunderatz.org/thor)](https://pkg.go.dev/go.thunderatz.org/thor)
+
 This is T.H.O.R. - ThundeRatz Holistic Operational Robot - It is ThundeRatz's virtual entity and it was created to be a central point where all
 the team's virtual presence can be connected and managed. It has a core and multiple services, it is a very early stage and most things are NYI.
 
