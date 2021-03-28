@@ -12,10 +12,10 @@ func (ghs *Service) SendDefaultVSSIssueMessage(issueNumber int) {
 	}
 
 	client.IssueComment("ThundeRatz", "vss_simulation", `Hi! Thank you for opening an issue for this project!  \
-Please, make sure you followed the project's [contribution guidelines](https://github.com/ThundeRatz/vss_simulation/blob/feature/open_source/CONTRIBUTING.md), a team member will answer when possible!
+Please, make sure you followed the project's [contribution guidelines](https://github.com/ThundeRatz/vss_simulation/blob/main/CONTRIBUTING.md), a team member will answer when possible!
 
 --
 
 Olá! Obrigado por abrir uma isse para esse projeto!  \
-Por favor, tenha certeza que leu  as [diretrizes de contribuição](https://github.com/ThundeRatz/vss_simulation/blob/feature/open_source/CONTRIBUTING.pt-br.md) do projeto, alguém da equipe responderá assim que possível!`, issueNumber)
+Por favor, tenha certeza que leu  as [diretrizes de contribuição](https://github.com/ThundeRatz/vss_simulation/blob/main/CONTRIBUTING.pt-br.md) do projeto, alguém da equipe responderá assim que possível!`, issueNumber)
 }
