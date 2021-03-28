@@ -51,3 +51,7 @@ One already implement connection is: GitHub Issue -> Core -> Discord Alert
 ## Packages
 
 There are some "lower-level" packages at `pkg` that wraps other libraries and serves as building blocks for the services and the core.
+
+---
+
+<img src="https://static.thunderatz.org/teamassets/logo-simples.png" width="200px" />
