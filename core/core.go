@@ -98,7 +98,7 @@ func initAPI() *http.Server {
 	go func() {
 		logger.Info().Msg("Starting API server")
 
-		if err := http.ListenAndServe(":8080", root); err != nil {
+		if err := srv.ListenAndServe(); err != nil {
 			logger.Error().Err(err).Send()
 		}
 	}()
@@ -113,7 +113,10 @@ func processForever() {
 	for {
 		select {
 		case msg := <-MsgCh:
-			logger.Info().Int("type", int(msg.Type)).Str("service", msg.From).Msg("Received Message")
+			logger.Info().
+				Str("type", types.CoreMsgTypeDesc[int(msg.Type)]).
+				Str("service_id", msg.From).
+				Msg("Received Message")
 			go ProcessMsg(msg)
 
 		case <-sc:
@@ -131,7 +134,6 @@ func Start() {
 	initLogger()
 
 	initServices()
-	defer DiscordService.Stop()
 
 	server := initAPI()
 
@@ -139,8 +141,12 @@ func Start() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	server.Shutdown(ctx)
+
+	go server.Shutdown(ctx)
+	DiscordService.Stop()
 
 	logger.Info().Msg("Shutting down")
+
+	<-ctx.Done()
 	os.Exit(0)
 }

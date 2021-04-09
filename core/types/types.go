@@ -46,6 +46,16 @@ const (
 	KVConfigSetMsg
 )
 
+var CoreMsgTypeDesc = []string{
+	"PingMsg",
+	"InfoMsg",
+	"GitHubStatsMsg",
+	"GitHubEventMsg",
+	"GitHubIssueReplyMsg",
+	"KVConfigGetMsg",
+	"KVConfigSetMsg",
+}
+
 // GitHubEventArgs represents data sent by the GitHub Webhook service
 type GitHubEventArgs struct {
 	Issue      *github.Issue
