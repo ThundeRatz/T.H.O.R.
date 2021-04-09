@@ -5,8 +5,8 @@ VERSION := 0.1.1b
 DATE_FMT := +%Y-%m-%d
 BUILD_DATE ?= $(shell date "$(DATE_FMT)")
 
-LDFLAGS := -X thunderatz.org/thor/core.Version=$(VERSION) $(LDFLAGS)
-LDFLAGS := -X thunderatz.org/thor/core.BuildDate=$(BUILD_DATE) $(LDFLAGS)
+LDFLAGS := -X go.thunderatz.org/thor/core.Version=$(VERSION) $(LDFLAGS)
+LDFLAGS := -X go.thunderatz.org/thor/core.BuildDate=$(BUILD_DATE) $(LDFLAGS)
 
 EXEC_FILE := thor
 
