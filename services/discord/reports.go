@@ -4,22 +4,10 @@ package discord
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/go-github/v29/github"
 )
-
-func getBaseEmbed() *discordgo.MessageEmbed {
-	return &discordgo.MessageEmbed{
-		Color:     0xe800ff,
-		Timestamp: time.Now().Format(time.RFC3339),
-		Footer: &discordgo.MessageEmbedFooter{
-			Text:    "T.H.O.R. | ThundeRatz",
-			IconURL: "https://static.thunderatz.org/ThorJoinha.png",
-		},
-	}
-}
 
 func (ds *Service) SendGitHubIssueAlert(issue *github.Issue, repoName string) {
 	embed := getBaseEmbed()
@@ -39,7 +27,7 @@ func (ds *Service) SendGitHubIssueAlert(issue *github.Issue, repoName string) {
 	}
 
 	embed.Fields = []*discordgo.MessageEmbedField{
-		&discordgo.MessageEmbedField{
+		{
 			Name:  "Description",
 			Value: body,
 		},

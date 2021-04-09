@@ -1,7 +1,7 @@
 BUILD_FILES = $(shell go list -f '{{range .GoFiles}}{{$$.Dir}}/{{.}}\
 {{end}}' ./...)
 
-VERSION := 0.1.0b
+VERSION := 0.1.1b
 DATE_FMT := +%Y-%m-%d
 BUILD_DATE ?= $(shell date "$(DATE_FMT)")
 

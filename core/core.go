@@ -113,7 +113,7 @@ func processForever() {
 	for {
 		select {
 		case msg := <-MsgCh:
-			logger.Info().Int("type", int(msg.Type)).Msg("Received Message")
+			logger.Info().Int("type", int(msg.Type)).Str("service", msg.From).Msg("Received Message")
 			go ProcessMsg(msg)
 
 		case <-sc:

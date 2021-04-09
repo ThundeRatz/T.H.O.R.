@@ -1,7 +1,7 @@
 # T.H.O.R. config file
 # This is an example file for all possible settings
 # and follows the TOML format, this should be placed
-# at your home directory or passed to the --config flag
+# at your home directory
 
 [core]
 verbosity = 0

@@ -2,6 +2,8 @@
 package types
 
 import (
+	"time"
+
 	"github.com/google/go-github/v29/github"
 	"go.thunderatz.org/thor/pkg/gclient"
 )
@@ -16,6 +18,7 @@ type (
 type CoreMsg struct {
 	Type  CoreMsgType
 	Reply CoreReplyCh
+	From  string
 
 	// Args must be one of the *Args related to the CoreMsg Type
 	Args interface{}
@@ -38,6 +41,9 @@ const (
 	InfoMsg
 	GitHubStatsMsg
 	GitHubEventMsg
+	GitHubIssueReplyMsg
+	KVConfigGetMsg
+	KVConfigSetMsg
 )
 
 // GitHubEventArgs represents data sent by the GitHub Webhook service
@@ -46,12 +52,42 @@ type GitHubEventArgs struct {
 	Repository *github.Repository
 }
 
+// GitHubIssueReplyArgs represents
+type GitHubIssueReplyArgs struct {
+	Lang string
+}
+
+// KVConfigGetArgs represents the key to be retrived from the core KV database
+type KVConfigGetArgs struct {
+	Key string
+}
+
+// KVConfigSetArgs represents the key and value to be set in the core KV database
+type KVConfigSetArgs struct {
+	Key   string
+	Value string
+}
+
 // InfoReply is the reply for the Info function
 type InfoReply struct {
 	NGoRoutines int
+	UsedMemory  uint64
+	Uptime      time.Duration
+	Version     string
+	BuildDate   string
 }
 
-// GitHubStatsReply is the reply for the GitHub Service GetStats function function
+// GitHubStatsReply is the reply for the GitHub Service GetStats function
 type GitHubStatsReply struct {
 	RepoStats gclient.RepoStats
+}
+
+// GitHubIssueReplyReply represents
+type GitHubIssueReplyReply struct {
+	Reply string
+}
+
+// KVConfigGetReply holds the value for the respective key
+type KVConfigGetReply struct {
+	Value string
 }

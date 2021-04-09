@@ -30,6 +30,7 @@ var pingCmd = &dclient.Command{
 		msgCh <- types.CoreMsg{
 			Type:  types.PingMsg,
 			Reply: replyCh,
+			From:  serviceId,
 		}
 
 		reply := <-replyCh

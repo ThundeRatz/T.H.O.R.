@@ -1,9 +1,13 @@
 package github
 
-import "go.thunderatz.org/thor/pkg/gclient"
+import (
+	"github.com/abadojack/whatlanggo"
+	"go.thunderatz.org/thor/core/types"
+	"go.thunderatz.org/thor/pkg/gclient"
+)
 
 // SendDefaultVSSIssueMessage send the default message to newly created issues
-func (ghs *Service) SendDefaultVSSIssueMessage(issueNumber int) {
+func (ghs *Service) SendDefaultVSSIssueMessage(repoName, body string, issueNumber int) {
 	client, err := gclient.NewInstallationClient(ghs.AppID, ghs.InstallationID, ghs.PEMFile, &ghs.logger)
 
 	if err != nil {
@@ -11,11 +15,21 @@ func (ghs *Service) SendDefaultVSSIssueMessage(issueNumber int) {
 		return
 	}
 
-	client.IssueComment("ThundeRatz", "vss_simulation", `Hi! Thank you for opening an issue for this project!  \
-Please, make sure you followed the project's [contribution guidelines](https://github.com/ThundeRatz/vss_simulation/blob/main/CONTRIBUTING.md), a team member will answer when possible!
+	lang := whatlanggo.DetectLang(body).Iso6391()
 
---
+	replyCh := make(types.CoreReplyCh)
 
-Olá! Obrigado por abrir uma isse para esse projeto!  \
-Por favor, tenha certeza que leu  as [diretrizes de contribuição](https://github.com/ThundeRatz/vss_simulation/blob/main/CONTRIBUTING.pt-br.md) do projeto, alguém da equipe responderá assim que possível!`, issueNumber)
+	msgCh <- types.CoreMsg{
+		Type:  types.GitHubIssueReplyMsg,
+		Reply: replyCh,
+		From:  serviceId,
+		Args: types.GitHubIssueReplyArgs{
+			Lang: lang,
+		},
+	}
+
+	reply := <-replyCh
+	replyText := reply.Reply.(*types.GitHubIssueReplyReply).Reply
+
+	client.IssueComment("ThundeRatz", repoName, replyText, issueNumber)
 }

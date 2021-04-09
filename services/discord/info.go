@@ -2,7 +2,12 @@ package discord
 
 import (
 	"fmt"
+	"strings"
+	"time"
 
+	"github.com/bwmarrin/discordgo"
+	"github.com/dustin/go-humanize"
+	"github.com/hako/durafmt"
 	"go.thunderatz.org/thor/core/types"
 	"go.thunderatz.org/thor/pkg/dclient"
 )
@@ -23,18 +28,49 @@ var infoCmd = &dclient.Command{
 		msgCh <- types.CoreMsg{
 			Type:  types.InfoMsg,
 			Reply: replyCh,
+			From:  serviceId,
 		}
 
 		reply := <-replyCh
 		ans := reply.Reply.(*types.InfoReply)
 
-		var msg = ""
-		if reply.Success == true {
-			msg = fmt.Sprintf("Got: %d", ans.NGoRoutines)
-		} else {
-			msg = "Error"
+		embed := getBaseEmbed()
+		embed.Title = "T.H.O.R."
+		embed.Description = "ThundeRatz Holistic Operational Robot"
+
+		var info strings.Builder
+		fmt.Fprintf(&info, "Used Mem: %s\n", humanize.IBytes(ans.UsedMemory))
+		fmt.Fprintf(&info, "GoRoutines: %d", ans.NGoRoutines)
+
+		embed.Fields = []*discordgo.MessageEmbedField{
+			{
+				Name:  "Info",
+				Value: info.String(),
+			},
+			{
+				Name:  "Uptime",
+				Value: durafmt.Parse(ans.Uptime.Round(time.Minute)).String(),
+			},
+			{
+				Name:   "Version",
+				Value:  ans.Version,
+				Inline: true,
+			},
+			{
+				Name:   "Build Date",
+				Value:  ans.BuildDate,
+				Inline: true,
+			},
 		}
 
-		c.Session.ChannelMessageSend(c.Message.ChannelID, msg)
+		if reply.Success == true {
+			if _, err := c.Session.ChannelMessageSendEmbed(c.Message.ChannelID, embed); err != nil {
+				c.Logger.Error().Err(err).Msg("Failed to send embed")
+				c.Session.ChannelMessageSend(c.Message.ChannelID, err.Error())
+			}
+		} else {
+			c.Session.ChannelMessageSend(c.Message.ChannelID, "Error")
+		}
+
 	},
 }

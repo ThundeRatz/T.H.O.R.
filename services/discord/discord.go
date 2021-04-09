@@ -2,6 +2,9 @@
 package discord
 
 import (
+	"time"
+
+	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
 
 	"go.thunderatz.org/thor/core/types"
@@ -9,7 +12,8 @@ import (
 )
 
 var (
-	msgCh types.CoreMsgCh
+	msgCh     types.CoreMsgCh
+	serviceId string
 )
 
 // Service is the main discord service struct
@@ -25,6 +29,7 @@ type Service struct {
 func (ds *Service) Init(_logger *zerolog.Logger, _ch types.CoreMsgCh) error {
 	ds.logger = _logger.With().Str("serv", "discord").Logger()
 	ds.client = &dclient.Client{}
+	serviceId = "discord"
 	msgCh = _ch
 
 	err := ds.client.Init(ds.Token, &ds.logger)
@@ -36,6 +41,7 @@ func (ds *Service) Init(_logger *zerolog.Logger, _ch types.CoreMsgCh) error {
 	ds.client.AddCommand(pingCmd)
 	ds.client.AddCommand(infoCmd)
 	ds.client.AddCommand(githubCmd)
+	ds.client.AddCommand(configCmd)
 	ds.client.AddHelpCmd()
 
 	return nil
@@ -58,4 +64,15 @@ func (ds *Service) SendMessage(content string) error {
 	}
 
 	return err
+}
+
+func getBaseEmbed() *discordgo.MessageEmbed {
+	return &discordgo.MessageEmbed{
+		Color:     0xe800ff,
+		Timestamp: time.Now().Format(time.RFC3339),
+		Footer: &discordgo.MessageEmbedFooter{
+			Text:    "T.H.O.R. | ThundeRatz",
+			IconURL: "https://static.thunderatz.org/ThorJoinha.png",
+		},
+	}
 }

@@ -9,6 +9,11 @@ import (
 	"go.thunderatz.org/thor/core/types"
 )
 
+var (
+	msgCh     types.CoreMsgCh
+	serviceId string
+)
+
 // Service represents the GitHub service.
 type Service struct {
 	AppID          int64
@@ -19,13 +24,10 @@ type Service struct {
 	logger zerolog.Logger
 }
 
-var (
-	msgCh types.CoreMsgCh
-)
-
 // Init initializes a GitHub service and adds its endpoint to the mux
 func (ghs *Service) Init(_logger *zerolog.Logger, r *mux.Router, _ch types.CoreMsgCh) {
 	ghs.logger = _logger.With().Str("serv", "github").Logger()
+	serviceId = "github"
 	msgCh = _ch
 
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -50,6 +52,7 @@ func (ghs *Service) process(w http.ResponseWriter, r *http.Request) {
 				msgCh <- types.CoreMsg{
 					Type:  types.GitHubEventMsg,
 					Reply: nil,
+					From:  serviceId,
 					Args: types.GitHubEventArgs{
 						Issue:      &payload.Issue,
 						Repository: &payload.Repo,

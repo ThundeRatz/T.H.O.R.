@@ -3,6 +3,7 @@ package discord
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"go.thunderatz.org/thor/core/types"
 	"go.thunderatz.org/thor/pkg/dclient"
@@ -34,8 +35,9 @@ func getOrderedStats(repoStats *gclient.RepoStats) string {
 		return ranked
 	}
 
-	out := "== Top 10 Additions, Deletions e Commits ==\n"
-	out += "```\nAdditions:\n"
+	var out strings.Builder
+	out.WriteString("== Top 10 Additions, Deletions e Commits ==\n")
+	out.WriteString("```\nAdditions:\n")
 
 	count := 0
 	for _, p := range ordered(repoStats.Adds) {
@@ -47,10 +49,10 @@ func getOrderedStats(repoStats *gclient.RepoStats) string {
 			break
 		}
 
-		out += fmt.Sprintf("%s: %d\n", p, repoStats.Adds[p])
+		fmt.Fprintf(&out, "%s: %d\n", p, repoStats.Adds[p])
 	}
 
-	out += fmt.Sprintln("\nDeletions:")
+	out.WriteString("\nDeletions:")
 
 	count = 0
 	for _, p := range ordered(repoStats.Dels) {
@@ -62,10 +64,10 @@ func getOrderedStats(repoStats *gclient.RepoStats) string {
 			break
 		}
 
-		out += fmt.Sprintf("%s: %d\n", p, repoStats.Dels[p])
+		fmt.Fprintf(&out, "%s: %d\n", p, repoStats.Dels[p])
 	}
 
-	out += fmt.Sprintln("\nCommits:")
+	out.WriteString("\nCommits:")
 
 	count = 0
 	for _, p := range ordered(repoStats.Commits) {
@@ -77,12 +79,12 @@ func getOrderedStats(repoStats *gclient.RepoStats) string {
 			break
 		}
 
-		out += fmt.Sprintf("%s: %d\n", p, repoStats.Commits[p])
+		fmt.Fprintf(&out, "%s: %d\n", p, repoStats.Commits[p])
 	}
 
-	out += "```"
+	out.WriteString("```")
 
-	return out
+	return out.String()
 }
 
 var githubCmd = &dclient.Command{
@@ -111,6 +113,7 @@ var githubCmd = &dclient.Command{
 			msgCh <- types.CoreMsg{
 				Type:  types.GitHubStatsMsg,
 				Reply: replyCh,
+				From:  serviceId,
 			}
 
 			reply := <-replyCh

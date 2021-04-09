@@ -44,10 +44,11 @@ type Client struct {
 	Config     []string
 	logger     zerolog.Logger
 
-	aliases  map[string]string
-	commands map[string]*Command
-	session  *discordgo.Session
-	token    string
+	aliases    map[string]string
+	commands   map[string]*Command
+	permLevels map[string]int
+	session    *discordgo.Session
+	token      string
 }
 
 // Init initializes a client with a provided token and logger
@@ -56,6 +57,11 @@ func (c *Client) Init(token string, logger *zerolog.Logger) error {
 	c.token = token
 	c.aliases = make(map[string]string)
 	c.commands = make(map[string]*Command)
+	c.permLevels = map[string]int{
+		"User":  0,
+		"Admin": 10,
+		"Owner": 99,
+	}
 
 	c.logger.Debug().Msg("Initializing discord client")
 
@@ -97,7 +103,6 @@ func (c *Client) OnMessageCreate(ds *discordgo.Session, mc *discordgo.MessageCre
 	var command string
 	command, args = strings.ToLower(strings.TrimPrefix(args[0], prefix)), args[1:]
 
-	// Get permLevel for mc c.permLevel(mc)
 	cmd, ok := c.commands[command]
 
 	if !ok {
@@ -114,7 +119,21 @@ func (c *Client) OnMessageCreate(ds *discordgo.Session, mc *discordgo.MessageCre
 		return
 	}
 
-	// Checa se o level é maior que que level do comando
+	permLevel := "User"
+
+	// For now, admin IDs are hardcoded
+	if mc.Author.ID == "232163710506893312" {
+		permLevel = "Owner"
+	}
+
+	if mc.Author.ID == "369989751974920201" {
+		permLevel = "Admin"
+	}
+
+	if c.permLevels[permLevel] < c.permLevels[cmd.PermLevel] {
+		ds.ChannelMessageSend(mc.ChannelID, "Você não tem permissão para usar esse comando!")
+		return
+	}
 
 	c.logger.Debug().
 		Str("user", mc.Author.Username).
@@ -123,12 +142,13 @@ func (c *Client) OnMessageCreate(ds *discordgo.Session, mc *discordgo.MessageCre
 		Msg("Running command")
 
 	cmd.Run(&Context{
-		Content: strings.TrimSpace(mc.Content),
-		Command: command,
-		Args:    args,
-		Session: ds,
-		Message: mc.Message,
-		Logger:  c.logger.With().Str("cmd", command).Logger(),
+		Content:         strings.TrimSpace(mc.Content),
+		Command:         command,
+		Args:            args,
+		Session:         ds,
+		Message:         mc.Message,
+		Logger:          c.logger.With().Str("cmd", command).Logger(),
+		AuthorPermLevel: permLevel,
 	})
 
 	// StopTyping
@@ -140,13 +160,7 @@ func (c *Client) OnMessageCreate(ds *discordgo.Session, mc *discordgo.MessageCre
 func (c *Client) OnReady(ds *discordgo.Session, r *discordgo.Ready) {
 	c.logger.Info().Msg("Discord client ready")
 
-	err := ds.UpdateStatusComplex(discordgo.UpdateStatusData{
-		Game: &discordgo.Game{
-			Name: "WCXV",
-			Type: discordgo.GameTypeStreaming,
-			URL:  "https://youtube.com/watch?v=XZHTBcfhZwg",
-		},
-	})
+	err := ds.UpdateStreamingStatus(0, "WCXV", "https://youtube.com/watch?v=XZHTBcfhZwg")
 
 	if err != nil {
 		c.logger.Error().Err(err)
@@ -171,19 +185,21 @@ func (c *Client) Help(ctx *Context) {
 		embed := &discordgo.MessageEmbed{
 			Color: 0xe800ff,
 			Author: &discordgo.MessageEmbedAuthor{
-				Name:    "Ajuda",
-				URL:     "https://thunderatz.org",
+				Name: "Ajuda",
+				URL:  "https://thunderatz.org",
 			},
 			Description: "Aqui você pode ver todos os comandos que eu conheço.",
 			Timestamp:   time.Now().Format(time.RFC3339),
 			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "T.H.O.R | ThundeRatz",
+				Text: "T.H.O.R | ThundeRatz",
 			},
 		}
 
 		values := ""
 		for _, v := range c.commands {
-			values += "`" + v.Name + "`, "
+			if c.permLevels[v.PermLevel] <= c.permLevels[ctx.AuthorPermLevel] {
+				values += "`" + v.Name + "`, "
+			}
 		}
 		values = strings.TrimSuffix(values, ", ")
 
