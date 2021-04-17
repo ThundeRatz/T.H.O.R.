@@ -42,8 +42,8 @@ type Client struct {
 	SettingsDB *bbolt.DB
 	LevelCache map[string]int // Vem da config
 	Config     []string
-	logger     zerolog.Logger
 
+	logger     zerolog.Logger
 	aliases    map[string]string
 	commands   map[string]*Command
 	permLevels map[string]int
@@ -58,9 +58,10 @@ func (c *Client) Init(token string, logger *zerolog.Logger) error {
 	c.aliases = make(map[string]string)
 	c.commands = make(map[string]*Command)
 	c.permLevels = map[string]int{
-		"User":  0,
-		"Admin": 10,
-		"Owner": 99,
+		"User":   0,
+		"Gestão": 9,
+		"Admin":  10,
+		"Owner":  99,
 	}
 
 	c.logger.Debug().Msg("Initializing discord client")
@@ -154,7 +155,7 @@ func (c *Client) OnMessageCreate(ds *discordgo.Session, mc *discordgo.MessageCre
 	// StopTyping
 }
 
-// OnReady is a DiscordGo Event Handler function.  This must be
+// OnReady is a DiscordGo Event Handler function. This must be
 // registered using the DiscordGo.Session.AddHandler function.  This function
 // will be called once the client is ready.
 func (c *Client) OnReady(ds *discordgo.Session, r *discordgo.Ready) {
@@ -165,6 +166,18 @@ func (c *Client) OnReady(ds *discordgo.Session, r *discordgo.Ready) {
 	if err != nil {
 		c.logger.Error().Err(err)
 	}
+}
+
+// SetMessageReactionAddHandler allows the addition of a custom
+// handler for MessageReactions
+func (c *Client) SetMessageReactionAddHandler(f func(ds *discordgo.Session, r *discordgo.MessageReactionAdd)) {
+	c.session.AddHandler(f)
+}
+
+// SetGuildMemberAddHandler allows the addition of a custom
+// handler for GuildMemberAdd
+func (c *Client) SetGuildMemberAddHandler(f func(ds *discordgo.Session, r *discordgo.GuildMemberAdd)) {
+	c.session.AddHandler(f)
 }
 
 // AddCommand adds a new command to the client
@@ -254,15 +267,11 @@ func (c *Client) Stop() {
 }
 
 // SendMessage sends a message to the specified channel
-func (c *Client) SendMessage(channelID, content string) error {
-	_, err := c.session.ChannelMessageSend(channelID, content)
-
-	return err
+func (c *Client) SendMessage(channelID, content string) (*discordgo.Message, error) {
+	return c.session.ChannelMessageSend(channelID, content)
 }
 
 // SendEmbed sends an embed message to the specified channel
-func (c *Client) SendEmbed(channelID string, embed *discordgo.MessageEmbed) error {
-	_, err := c.session.ChannelMessageSendEmbed(channelID, embed)
-
-	return err
+func (c *Client) SendEmbed(channelID string, embed *discordgo.MessageEmbed) (*discordgo.Message, error) {
+	return c.session.ChannelMessageSendEmbed(channelID, embed)
 }

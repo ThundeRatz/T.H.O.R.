@@ -33,7 +33,7 @@ func (ds *Service) SendGitHubIssueAlert(issue *github.Issue, repoName string) {
 		},
 	}
 
-	if err := ds.client.SendEmbed(ds.AlertChannel, embed); err != nil {
+	if _, err := ds.client.SendEmbed(ds.AlertChannel, embed); err != nil {
 		ds.logger.Error().Err(err).Msg("Failed to send Issue Alert")
 	}
 }
