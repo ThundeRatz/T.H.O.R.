@@ -66,11 +66,9 @@ func (c *Client) Init(token string, logger *zerolog.Logger) error {
 
 	c.logger.Debug().Msg("Initializing discord client")
 
-	for _, v := range c.commands {
-		c.logger.Debug().Str("cmd", v.Name).Msg("Loaded command")
-	}
-
 	c.session, _ = discordgo.New(fmt.Sprintf("Bot %s", c.token))
+	c.session.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
+
 	c.session.AddHandler(c.OnMessageCreate)
 	c.session.AddHandler(c.OnReady)
 
@@ -171,12 +169,16 @@ func (c *Client) OnReady(ds *discordgo.Session, r *discordgo.Ready) {
 // SetMessageReactionAddHandler allows the addition of a custom
 // handler for MessageReactions
 func (c *Client) SetMessageReactionAddHandler(f func(ds *discordgo.Session, r *discordgo.MessageReactionAdd)) {
+	c.logger.Debug().Str("event", "MessageReactionAdd").Msg("Adding handler")
+
 	c.session.AddHandler(f)
 }
 
 // SetGuildMemberAddHandler allows the addition of a custom
 // handler for GuildMemberAdd
 func (c *Client) SetGuildMemberAddHandler(f func(ds *discordgo.Session, r *discordgo.GuildMemberAdd)) {
+	c.logger.Debug().Str("event", "GuildMemberAdd").Msg("Adding handler")
+
 	c.session.AddHandler(f)
 }
 

@@ -58,6 +58,7 @@ func (ds *Service) Init(_logger *zerolog.Logger, _ch types.CoreMsgCh) error {
 }
 
 func (ds *Service) OnMessageReactionAdd(s *discordgo.Session, r *discordgo.MessageReactionAdd) {
+	ds.logger.Debug().Msg("MessageReactionAdd event received")
 	if r.UserID == s.State.User.ID {
 		return
 	}
@@ -89,15 +90,20 @@ func (ds *Service) OnMessageReactionAdd(s *discordgo.Session, r *discordgo.Messa
 		allRoles, err := s.GuildRoles(r.GuildID)
 
 		if err != nil {
+			ds.logger.Err(err).Msg("Couldn't fetch roles")
 			return
 		}
 
-		if r.Emoji.ID == emojiReactRoleMember {
-			s.GuildMemberRoleAdd(r.GuildID, args[1], getRoleFromSliceByName(allRoles, "Membro").ID)
+		if r.Emoji.Name == emojiReactRoleMember {
+			err = s.GuildMemberRoleAdd(r.GuildID, args[1], getRoleFromSliceByName(allRoles, "Membro").ID)
 		}
 
-		if r.Emoji.ID == emojiReactRoleBixe {
-			s.GuildMemberRoleAdd(r.GuildID, args[1], getRoleFromSliceByName(allRoles, "Bixe").ID)
+		if r.Emoji.Name == emojiReactRoleBixe {
+			err = s.GuildMemberRoleAdd(r.GuildID, args[1], getRoleFromSliceByName(allRoles, "Bixe").ID)
+		}
+
+		if err != nil {
+			ds.logger.Err(err).Str("member_id", args[1]).Msg("Can't add role to member")
 		}
 
 		s.MessageReactionsRemoveAll(r.ChannelID, r.MessageID)
@@ -105,6 +111,7 @@ func (ds *Service) OnMessageReactionAdd(s *discordgo.Session, r *discordgo.Messa
 }
 
 func (ds *Service) OnMemberAdd(s *discordgo.Session, r *discordgo.GuildMemberAdd) {
+	ds.logger.Debug().Msg("GuildMemberAdd event received")
 	replyCh := make(types.CoreReplyCh)
 
 	msgCh <- types.CoreMsg{
