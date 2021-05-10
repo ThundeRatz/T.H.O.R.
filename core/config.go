@@ -50,10 +50,6 @@ func initConfig() {
 	logger.Debug().Msg("Initialized")
 }
 
-func InitTest() {
-	initConfig()
-}
-
 // GetConfig gets a value from the KV database given its key, if present
 func GetConfig(key string) (string, error) {
 	db, err := badger.Open(
@@ -101,4 +97,41 @@ func SetConfig(key, value string) error {
 		err := txn.Set([]byte(key), []byte(value))
 		return err
 	})
+}
+
+// GetKeyList returns all keys in the database
+func GetKeyList() ([]string, error) {
+	db, err := badger.Open(
+		badger.DefaultOptions(viper.GetString("core.settings_db")).
+			WithLoggingLevel(badger.ERROR),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer db.Close()
+
+	keys := []string{}
+
+	err = db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+
+		it := txn.NewIterator(opts)
+		defer it.Close()
+
+		for it.Rewind(); it.Valid(); it.Next() {
+			k := string(it.Item().Key())
+			keys = append(keys, k)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return keys, nil
 }

@@ -29,7 +29,16 @@ func ProcessMsg(msg types.CoreMsg) {
 	case types.KVConfigGetMsg:
 		args := msg.Args.(types.KVConfigGetArgs)
 
-		value, err := GetConfig(msg.From + "/" + args.Key)
+		var key string
+
+		// Discord service can get and set any config key and is not restricted to its namespace
+		if msg.From == "discord" {
+			key = args.Key
+		} else {
+			key = msg.From + "/" + args.Key
+		}
+
+		value, err := GetConfig(key)
 
 		msg.Reply <- types.CoreReply{
 			Success: err == nil,
@@ -38,10 +47,29 @@ func ProcessMsg(msg types.CoreMsg) {
 			},
 		}
 
+	case types.KVConfigListMsg:
+		keys, err := GetKeyList()
+
+		msg.Reply <- types.CoreReply{
+			Success: err == nil,
+			Reply: &types.KVConfigListReply{
+				Keys: keys,
+			},
+		}
+
 	case types.KVConfigSetMsg:
 		args := msg.Args.(types.KVConfigSetArgs)
 
-		err := SetConfig(msg.From+"/"+args.Key, args.Value)
+		var key string
+
+		// Discord service can get and set any config key and is not restricted to its namespace
+		if msg.From == "discord" {
+			key = args.Key
+		} else {
+			key = msg.From + "/" + args.Key
+		}
+
+		err := SetConfig(key, args.Value)
 
 		msg.Reply <- types.CoreReply{
 			Success: err == nil,
@@ -73,12 +101,11 @@ func ProcessMsg(msg types.CoreMsg) {
 	case types.GitHubIssueReplyMsg:
 		args := msg.Args.(types.GitHubIssueReplyArgs)
 
-		// This config is set by the discord service, so we get it from its config pool
-		value, err := GetConfig("discord/issue-reply/" + args.Lang)
+		value, err := GetConfig("github/issue-reply/" + args.Lang)
 
 		if err != nil {
 			// Defaults to english if not found
-			value, err = GetConfig("discord/issue-reply/en")
+			value, err = GetConfig("github/issue-reply/en")
 		}
 
 		msg.Reply <- types.CoreReply{
@@ -87,8 +114,51 @@ func ProcessMsg(msg types.CoreMsg) {
 				Reply: value,
 			},
 		}
-	}
 
+	case types.TLTestMsg:
+		args := msg.Args.(types.TLTestArgs)
+
+		scOut := make(chan string)
+		scIn := make(chan string)
+		err := ThunderServerService.StartThunderLeagueDroplet()
+
+		msg.Reply <- types.CoreReply{
+			Success: err == nil,
+			Reply: &types.TLTestReply{
+				StatusCh: scOut,
+			},
+		}
+
+		if err != nil {
+			close(scOut)
+			close(scIn)
+			return
+		}
+
+		go func() {
+			err = ThunderServerService.RunThunderLeagueTest(args.Commit, args.Enemy, args.Amount, scIn)
+			close(scIn)
+
+			if err != nil {
+				logger.Error().Err(err).Msg("Error on RunThunderLeagueTest")
+				return
+			}
+		}()
+
+		for msg := range scIn {
+			logger.Debug().Msg(msg)
+			scOut <- msg
+		}
+
+		scOut <- "Test finished, results NYI"
+		close(scOut)
+
+		err = ThunderServerService.StopThunderLeagueDroplet()
+
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to stop thunderleague droplet")
+		}
+	}
 }
 
 // Ping does nothing, can be used to check if core is up and response time

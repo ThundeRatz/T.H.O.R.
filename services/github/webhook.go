@@ -37,7 +37,7 @@ func (ghs *Service) validatePayload(next http.Handler) http.Handler {
 
 		if err != nil {
 			ghs.logger.Error().Err(err).Send()
-			http.Error(w, http.StatusText(401), 401)
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
 

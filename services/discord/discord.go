@@ -14,13 +14,13 @@ import (
 )
 
 var (
-	msgCh     types.CoreMsgCh
-	serviceId string
+	msgCh types.CoreMsgCh
 )
 
 const (
 	emojiReactRoleMember = "😎"
 	emojiReactRoleBixe   = "👶"
+	serviceId            = "discord"
 )
 
 // Service is the main discord service struct
@@ -34,9 +34,8 @@ type Service struct {
 
 // Init initializes discord service
 func (ds *Service) Init(_logger *zerolog.Logger, _ch types.CoreMsgCh) error {
-	ds.logger = _logger.With().Str("serv", "discord").Logger()
+	ds.logger = _logger.With().Str("serv", serviceId).Logger()
 	ds.client = &dclient.Client{}
-	serviceId = "discord"
 	msgCh = _ch
 
 	err := ds.client.Init(ds.Token, &ds.logger)
@@ -119,7 +118,7 @@ func (ds *Service) OnMemberAdd(s *discordgo.Session, r *discordgo.GuildMemberAdd
 		Reply: replyCh,
 		From:  serviceId,
 		Args: types.KVConfigGetArgs{
-			Key: "member-add-ch",
+			Key: "discord/member-add-ch",
 		},
 	}
 

@@ -8,6 +8,7 @@ require (
 	github.com/bradleyfalzon/ghinstallation v1.1.1
 	github.com/bwmarrin/discordgo v0.23.2
 	github.com/dgraph-io/badger/v3 v3.2011.1
+	github.com/digitalocean/godo v1.60.0 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-git/go-git/v5 v5.0.0
@@ -31,6 +32,6 @@ require (
 	github.com/spf13/viper v1.6.3
 	go.etcd.io/bbolt v1.3.4
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-	golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gopkg.in/ini.v1 v1.55.0 // indirect
 )

@@ -10,8 +10,11 @@ import (
 )
 
 var (
-	msgCh     types.CoreMsgCh
-	serviceId string
+	msgCh types.CoreMsgCh
+)
+
+const (
+	serviceId = "github"
 )
 
 // Service represents the GitHub service.
@@ -26,13 +29,11 @@ type Service struct {
 
 // Init initializes a GitHub service and adds its endpoint to the mux
 func (ghs *Service) Init(_logger *zerolog.Logger, r *mux.Router, _ch types.CoreMsgCh) {
-	ghs.logger = _logger.With().Str("serv", "github").Logger()
-	serviceId = "github"
+	ghs.logger = _logger.With().Str("serv", serviceId).Logger()
 	msgCh = _ch
 
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		return
 	})
 
 	r.Use(ghs.validatePayload)
@@ -64,8 +65,27 @@ func (ghs *Service) process(w http.ResponseWriter, r *http.Request) {
 			ghs.logger.Info().Int("issue", issue.GetNumber()).Str("repository", payload.Repo.GetName()).Msg("New Issue created")
 		}
 
+	case "issue_comment":
+		if payload.Action == "created" {
+			issue := payload.Issue
+			ic := payload.IssueComment
+
+			isPR := issue.GetPullRequestLinks() != nil
+
+			var msg string
+			if isPR {
+				msg = "New Pull Request Comment"
+			} else {
+				msg = "New Issue Comment"
+			}
+
+			ghs.logger.Info().Int("pr", issue.GetNumber()).Str("repository", payload.Repo.GetName()).Msg(msg)
+
+			go ghs.ProcessIssueComment(payload.Repo.GetName(), ic.GetBody(), issue.GetNumber(), isPR)
+		}
+
 	default:
 		ghs.logger.Error().Str("Request ID", requestID).Str("event type", githubEvent).Msg("No Handler")
-		http.Error(w, http.StatusText(404), 404)
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}
 }

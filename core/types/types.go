@@ -44,6 +44,8 @@ const (
 	GitHubIssueReplyMsg
 	KVConfigGetMsg
 	KVConfigSetMsg
+	KVConfigListMsg
+	TLTestMsg
 )
 
 var CoreMsgTypeDesc = []string{
@@ -54,6 +56,8 @@ var CoreMsgTypeDesc = []string{
 	"GitHubIssueReplyMsg",
 	"KVConfigGetMsg",
 	"KVConfigSetMsg",
+	"KVConfigListMsg",
+	"TLTestMsg",
 }
 
 // GitHubEventArgs represents data sent by the GitHub Webhook service
@@ -78,6 +82,13 @@ type KVConfigSetArgs struct {
 	Value string
 }
 
+// TLTestArgs represents what to be tested by the thunderleague server
+type TLTestArgs struct {
+	Commit string  // Commit hash of the first team
+	Enemy  string  // Name of the second team or hash for a different commit
+	Amount int
+}
+
 // InfoReply is the reply for the Info function
 type InfoReply struct {
 	NGoRoutines int
@@ -100,4 +111,14 @@ type GitHubIssueReplyReply struct {
 // KVConfigGetReply holds the value for the respective key
 type KVConfigGetReply struct {
 	Value string
+}
+
+// KVConfigListReply holds the list of keys saved on the database
+type KVConfigListReply struct {
+	Keys []string
+}
+
+// KVConfigListReply holds the list of keys saved on the database
+type TLTestReply struct {
+	StatusCh chan string
 }

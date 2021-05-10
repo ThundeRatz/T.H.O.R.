@@ -15,6 +15,7 @@ import (
 	"go.thunderatz.org/thor/core/types"
 	"go.thunderatz.org/thor/services/discord"
 	"go.thunderatz.org/thor/services/github"
+	"go.thunderatz.org/thor/services/thunderserver"
 )
 
 var logger zerolog.Logger
@@ -24,8 +25,9 @@ type ThorCore struct{}
 
 // Services
 var (
-	DiscordService *discord.Service
-	GitHubService  *github.Service
+	DiscordService       *discord.Service
+	GitHubService        *github.Service
+	ThunderServerService *thunderserver.Service
 )
 
 var (
@@ -81,9 +83,18 @@ func initGitHubService() {
 	GitHubService.Init(&logger, ghRouter, MsgCh)
 }
 
+func initThunderServerService() {
+	ThunderServerService = &thunderserver.Service{
+		Token: viper.GetString("server.token"),
+	}
+
+	ThunderServerService.Init(&logger, MsgCh)
+}
+
 func initServices() {
 	initDiscordService()
 	initGitHubService()
+	initThunderServerService()
 }
 
 func initAPI() *http.Server {
@@ -108,7 +119,7 @@ func initAPI() *http.Server {
 
 func processForever() {
 	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 
 	for {
 		select {
@@ -132,7 +143,6 @@ func Start() {
 	MsgCh = make(types.CoreMsgCh, 10)
 
 	initLogger()
-
 	initServices()
 
 	server := initAPI()
