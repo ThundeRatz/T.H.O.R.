@@ -73,14 +73,28 @@ func NewAppClient(appID int64, PEMFile string, logger *zerolog.Logger) (*Client,
 
 // GetRepositories returns a slice of all repository names for the organization
 func (gc *Client) GetRepositories(orgName string) []string {
-	repos, _, _ := gc.c.Repositories.ListByOrg(context.Background(), orgName, &github.RepositoryListByOrgOptions{
+	repoNames := []string{}
+
+	opt := &github.RepositoryListByOrgOptions{
 		ListOptions: github.ListOptions{PerPage: 100},
-	})
+	}
 
-	repoNames := make([]string, len(repos))
+	for {
+		repos, resp, err := gc.c.Repositories.ListByOrg(context.Background(), orgName, opt)
 
-	for i, v := range repos {
-		repoNames[i] = v.GetName()
+		if err != nil {
+			gc.logger.Error().Err(err).Msg("Failed to fetch repositories")
+			return repoNames
+		}
+
+		for _, v := range repos {
+			repoNames = append(repoNames, v.GetName())
+		}
+
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.Page = resp.NextPage
 	}
 
 	return repoNames
@@ -88,14 +102,28 @@ func (gc *Client) GetRepositories(orgName string) []string {
 
 // GetMembers returns a slice of all members users for the organization
 func (gc *Client) GetMembers(orgName string) []string {
-	members, _, _ := gc.c.Organizations.ListMembers(context.Background(), orgName, &github.ListMembersOptions{
+	memberNames := []string{}
+
+	opt := &github.ListMembersOptions{
 		ListOptions: github.ListOptions{PerPage: 100},
-	})
+	}
 
-	memberNames := make([]string, len(members))
+	for {
+		members, resp, err := gc.c.Organizations.ListMembers(context.Background(), orgName, opt)
 
-	for i, v := range members {
-		memberNames[i] = v.GetLogin()
+		if err != nil {
+			gc.logger.Error().Err(err).Msg("Failed to fetch repositories")
+			return memberNames
+		}
+
+		for _, v := range members {
+			memberNames = append(memberNames, v.GetLogin())
+		}
+
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.Page = resp.NextPage
 	}
 
 	return memberNames

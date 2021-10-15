@@ -52,7 +52,7 @@ func getOrderedStats(repoStats *gclient.RepoStats) string {
 		fmt.Fprintf(&out, "%s: %d\n", p, repoStats.Adds[p])
 	}
 
-	out.WriteString("\nDeletions:")
+	out.WriteString("\nDeletions:\n")
 
 	count = 0
 	for _, p := range ordered(repoStats.Dels) {
@@ -67,7 +67,7 @@ func getOrderedStats(repoStats *gclient.RepoStats) string {
 		fmt.Fprintf(&out, "%s: %d\n", p, repoStats.Dels[p])
 	}
 
-	out.WriteString("\nCommits:")
+	out.WriteString("\nCommits:\n")
 
 	count = 0
 	for _, p := range ordered(repoStats.Commits) {
